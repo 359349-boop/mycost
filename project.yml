@@ -1,0 +1,34 @@
+name: MyCost
+options:
+  bundleIdPrefix: com.yourname
+settings:
+  MARKETING_VERSION: 0.1.0
+  CURRENT_PROJECT_VERSION: 1
+  IPHONEOS_DEPLOYMENT_TARGET: 17.0
+  CODE_SIGN_STYLE: Automatic
+  DEVELOPMENT_TEAM: ""
+  PRODUCT_BUNDLE_IDENTIFIER: com.yourname.mycost
+
+targets:
+  MyCost:
+    type: application
+    platform: iOS
+    sources:
+      - path: MyCostApp.swift
+      - path: Models
+      - path: ViewModels
+      - path: Views
+      - path: Services
+    resources:
+      - path: Resources
+      - path: Info.plist
+    entitlements:
+      path: MyCost.entitlements
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: mycost
+        UILaunchScreen:
+          UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
