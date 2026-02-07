@@ -19,6 +19,8 @@ struct AddTransactionView: View {
     @State private var showingCategoryManager = false
     @State private var showingDatePicker = false
     @State private var dateDismissTask: Task<Void, Never>?
+    @State private var isEditingNote = false
+    @FocusState private var noteFocused: Bool
 
     init(transaction: Transaction? = nil) {
         self.transaction = transaction
@@ -49,7 +51,7 @@ struct AddTransactionView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                if !showingDatePicker {
+                if !showingDatePicker && !isEditingNote {
                     CalculatorPad(
                         expression: $amountExpression,
                         isCompleteEnabled: amountValue != nil,
@@ -71,6 +73,11 @@ struct AddTransactionView: View {
             .onChange(of: date) { _, _ in
                 guard showingDatePicker else { return }
                 scheduleDatePickerDismiss()
+            }
+            .onChange(of: noteFocused) { _, focused in
+                if !focused && isEditingNote {
+                    isEditingNote = false
+                }
             }
             .sheet(isPresented: $showingCategoryManager) {
                 NavigationStack {
@@ -136,10 +143,6 @@ struct AddTransactionView: View {
                 } label: {
                     EmptyView()
                 }
-
-                GroupBox {
-                    TextField("备注（可选）", text: $note)
-                }
             }
             .padding()
             .padding(.bottom, 120)
@@ -157,8 +160,44 @@ struct AddTransactionView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            noteRow
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var noteRow: some View {
+        Group {
+            if isEditingNote {
+                TextField("备注", text: $note)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($noteFocused)
+                    .submitLabel(.done)
+                    .onSubmit { finishNoteEditing() }
+                    .onAppear { noteFocused = true }
+            } else {
+                Button {
+                    beginNoteEditing()
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("备注")
+                            .font(.caption)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(Capsule())
+
+                        if !note.isEmpty {
+                            Text(note)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.top, 6)
     }
 
     private var categorySection: some View {
@@ -234,5 +273,15 @@ struct AddTransactionView: View {
         formatter.currencyCode = "CNY"
         formatter.maximumFractionDigits = 2
         return formatter.string(from: NSNumber(value: value)) ?? "¥0"
+    }
+
+    private func beginNoteEditing() {
+        isEditingNote = true
+        noteFocused = true
+    }
+
+    private func finishNoteEditing() {
+        noteFocused = false
+        isEditingNote = false
     }
 }
