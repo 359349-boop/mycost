@@ -12,6 +12,7 @@ struct CategoryBucket: Identifiable {
     let id = UUID()
     let name: String
     let iconName: String
+    let colorHex: String
     let total: Double
 }
 
@@ -63,7 +64,8 @@ final class StatsViewModel {
                 $0 + NSDecimalNumber(decimal: $1.amount).doubleValue
             }
             let icon = items.first?.category?.iconName ?? "tag"
-            return CategoryBucket(name: key, iconName: icon, total: total)
+            let colorHex = items.first?.category?.colorHex ?? "#0A84FF"
+            return CategoryBucket(name: key, iconName: icon, colorHex: colorHex, total: total)
         }
 
         return buckets.sorted { $0.total > $1.total }

@@ -28,9 +28,24 @@ struct StatsView: View {
     private var summaryRow: some View {
         let current = viewModel.monthlySummary(for: .now, transactions: transactions)
         return HStack(spacing: 12) {
-            StatSummaryCard(title: "本月支出", value: format(currency: current.expense))
-            StatSummaryCard(title: "本月收入", value: format(currency: current.income))
-            StatSummaryCard(title: "结余", value: format(currency: current.balance))
+            StatSummaryCard(
+                title: "本月支出",
+                value: format(currency: current.expense),
+                systemImage: "arrow.down.circle.fill",
+                tint: .red
+            )
+            StatSummaryCard(
+                title: "本月收入",
+                value: format(currency: current.income),
+                systemImage: "arrow.up.circle.fill",
+                tint: .green
+            )
+            StatSummaryCard(
+                title: "结余",
+                value: format(currency: current.balance),
+                systemImage: "equal.circle.fill",
+                tint: .blue
+            )
         }
     }
 
@@ -47,16 +62,29 @@ struct StatsView: View {
         let yoy = percentChange(current: current.expense, previous: lastYearSummary.expense)
 
         return HStack(spacing: 12) {
-            StatSummaryCard(title: "支出环比", value: mom)
-            StatSummaryCard(title: "支出同比", value: yoy)
+            StatSummaryCard(
+                title: "支出环比",
+                value: mom,
+                systemImage: "chart.line.uptrend.xyaxis",
+                tint: .orange
+            )
+            StatSummaryCard(
+                title: "支出同比",
+                value: yoy,
+                systemImage: "chart.line.uptrend.xyaxis",
+                tint: .purple
+            )
         }
     }
 
     private var monthlyChart: some View {
         let buckets = viewModel.monthlyBuckets(from: transactions)
         return VStack(alignment: .leading, spacing: 8) {
-            Text("月度趋势")
-                .font(.headline)
+            HStack {
+                Text("月度趋势")
+                    .font(.headline)
+                Spacer()
+            }
             Chart {
                 ForEach(buckets) { bucket in
                     BarMark(
@@ -64,16 +92,19 @@ struct StatsView: View {
                         y: .value("支出", bucket.expense)
                     )
                     .foregroundStyle(Color.accentColor)
+                    .cornerRadius(6)
 
                     LineMark(
                         x: .value("月份", bucket.monthStart, unit: .month),
                         y: .value("收入", bucket.income)
                     )
                     .foregroundStyle(.secondary)
+                    .symbol(.circle)
                 }
             }
             .frame(height: 220)
             .chartXAxis(.automatic)
+            .chartLegend(.hidden)
         }
         .padding()
         .background(Color(.secondarySystemBackground))
@@ -90,9 +121,11 @@ struct StatsView: View {
             } else {
                 Chart(buckets) { bucket in
                     SectorMark(
-                        angle: .value("金额", bucket.total)
+                        angle: .value("金额", bucket.total),
+                        innerRadius: .ratio(0.55),
+                        angularInset: 2
                     )
-                    .foregroundStyle(by: .value("分类", bucket.name))
+                    .foregroundStyle(Color(hex: bucket.colorHex))
                 }
                 .frame(height: 220)
             }
@@ -113,10 +146,7 @@ struct StatsView: View {
                 VStack(spacing: 10) {
                     ForEach(buckets) { bucket in
                         HStack(spacing: 12) {
-                            Image(systemName: bucket.iconName)
-                                .frame(width: 28, height: 28)
-                                .background(Color(.secondarySystemBackground))
-                                .clipShape(Circle())
+                            CategoryIcon(iconName: bucket.iconName, colorHex: bucket.colorHex, size: 28, cornerRadius: 10)
                             Text(bucket.name)
                                 .font(.subheadline)
                             Spacer()

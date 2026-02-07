@@ -11,10 +11,12 @@ struct AddTransactionView: View {
     private let transaction: Transaction?
 
     @State private var type: String
-    @State private var amountText: String
+    @State private var amountExpression: String
     @State private var selectedCategory: Category?
     @State private var date: Date
     @State private var note: String
+
+    @State private var showingCategoryManager = false
 
     init(transaction: Transaction? = nil) {
         self.transaction = transaction
@@ -27,7 +29,7 @@ struct AddTransactionView: View {
         }
 
         _type = State(initialValue: transaction?.type ?? "Expense")
-        _amountText = State(initialValue: amountString)
+        _amountExpression = State(initialValue: amountString)
         _selectedCategory = State(initialValue: transaction?.category)
         _date = State(initialValue: transaction?.date ?? .now)
         _note = State(initialValue: transaction?.note ?? "")
@@ -35,52 +37,97 @@ struct AddTransactionView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("类型") {
-                    Picker("类型", selection: $type) {
-                        Text("支出").tag("Expense")
-                        Text("收入").tag("Income")
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                Section("金额") {
-                    TextField("0", text: $amountText)
-                        .keyboardType(.decimalPad)
-                }
-
-                Section("分类") {
-                    Picker("分类", selection: $selectedCategory) {
-                        Text("未分类").tag(Category?.none)
-                        ForEach(filteredCategories, id: \.id) { category in
-                            Text(category.name).tag(Category?.some(category))
-                        }
-                    }
-                }
-
-                Section("日期") {
-                    DatePicker("日期", selection: $date, displayedComponents: .date)
-                }
-
-                Section("备注") {
-                    TextField("可选", text: $note)
-                }
+            VStack(spacing: 0) {
+                formContent
             }
             .navigationTitle(transaction == nil ? "记一笔" : "编辑账目")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("取消") { dismiss() }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("保存") { save() }
-                        .disabled(!canSave)
-                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                CalculatorPad(
+                    expression: $amountExpression,
+                    isCompleteEnabled: amountValue != nil,
+                    onComplete: save
+                )
             }
             .onChange(of: type) { _, newValue in
                 if selectedCategory?.type != newValue {
                     selectedCategory = nil
                 }
             }
+            .sheet(isPresented: $showingCategoryManager) {
+                NavigationStack {
+                    CategoryListView()
+                }
+            }
+        }
+    }
+
+    private var formContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                amountDisplay
+
+                GroupBox {
+                    HStack(spacing: 12) {
+                        Text("类型")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Picker("类型", selection: $type) {
+                            Text("支出").tag("Expense")
+                            Text("收入").tag("Income")
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 140)
+                    }
+
+                    Divider()
+
+                    categorySection
+                        .frame(maxHeight: 240)
+                } label: {
+                    Text("分类")
+                }
+
+                GroupBox {
+                    DatePicker("日期", selection: $date, displayedComponents: .date)
+                }
+
+                GroupBox {
+                    TextField("备注（可选）", text: $note)
+                }
+            }
+            .padding()
+            .padding(.bottom, 120)
+        }
+    }
+
+    private var amountDisplay: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(displayExpression)
+                .font(.largeTitle)
+                .fontWeight(.semibold)
+                .monospacedDigit()
+            if let value = amountValue {
+                Text(format(currency: value))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var categorySection: some View {
+        ScrollView {
+            CategoryGrid(
+                categories: filteredCategories,
+                selected: $selectedCategory,
+                onAdd: { showingCategoryManager = true }
+            )
         }
     }
 
@@ -88,12 +135,17 @@ struct AddTransactionView: View {
         categories.filter { $0.type == type }
     }
 
-    private var canSave: Bool {
-        Decimal(string: amountText) != nil
+    private var displayExpression: String {
+        amountExpression.isEmpty ? "0" : amountExpression
+    }
+
+    private var amountValue: Double? {
+        CalculatorEngine.evaluate(amountExpression)
     }
 
     private func save() {
-        guard let amount = Decimal(string: amountText) else { return }
+        guard let value = amountValue else { return }
+        let amount = Decimal(value)
 
         if let txn = transaction {
             txn.amount = amount
@@ -115,5 +167,13 @@ struct AddTransactionView: View {
 
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         dismiss()
+    }
+
+    private func format(currency value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "CNY"
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "¥0"
     }
 }
