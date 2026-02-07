@@ -17,6 +17,8 @@ struct AddTransactionView: View {
     @State private var note: String
 
     @State private var showingCategoryManager = false
+    @State private var showingDatePicker = false
+    @State private var dateDismissTask: Task<Void, Never>?
 
     init(transaction: Transaction? = nil) {
         self.transaction = transaction
@@ -40,28 +42,53 @@ struct AddTransactionView: View {
             VStack(spacing: 0) {
                 formContent
             }
-            .navigationTitle(transaction == nil ? "记一笔" : "编辑账目")
+            .navigationTitle("")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("取消") { dismiss() }
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                CalculatorPad(
-                    expression: $amountExpression,
-                    isCompleteEnabled: amountValue != nil,
-                    onComplete: save
-                )
+                if !showingDatePicker {
+                    CalculatorPad(
+                        expression: $amountExpression,
+                        isCompleteEnabled: amountValue != nil,
+                        onComplete: save
+                    )
+                }
             }
             .onChange(of: type) { _, newValue in
                 if selectedCategory?.type != newValue {
                     selectedCategory = nil
                 }
             }
+            .onChange(of: showingDatePicker) { _, newValue in
+                if !newValue {
+                    dateDismissTask?.cancel()
+                    dateDismissTask = nil
+                }
+            }
+            .onChange(of: date) { _, _ in
+                guard showingDatePicker else { return }
+                scheduleDatePickerDismiss()
+            }
             .sheet(isPresented: $showingCategoryManager) {
                 NavigationStack {
                     CategoryListView()
                 }
+            }
+            .sheet(isPresented: $showingDatePicker) {
+                VStack {
+                    DatePicker(
+                        "",
+                        selection: $date,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .labelsHidden()
+                    .padding()
+                }
+                .presentationDetents([.height(360)])
             }
         }
     }
@@ -69,14 +96,25 @@ struct AddTransactionView: View {
     private var formContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                amountDisplay
-
                 GroupBox {
                     HStack(spacing: 12) {
-                        Text("类型")
+                        Button {
+                            showingDatePicker = true
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "calendar")
+                                Text(formattedMonthDay)
+                            }
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        Spacer()
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+
+                        Spacer(minLength: 8)
+
                         Picker("类型", selection: $type) {
                             Text("支出").tag("Expense")
                             Text("收入").tag("Income")
@@ -90,11 +128,13 @@ struct AddTransactionView: View {
                     categorySection
                         .frame(maxHeight: 240)
                 } label: {
-                    Text("分类")
+                    EmptyView()
                 }
 
                 GroupBox {
-                    DatePicker("日期", selection: $date, displayedComponents: .date)
+                    amountDisplay
+                } label: {
+                    EmptyView()
                 }
 
                 GroupBox {
@@ -141,6 +181,25 @@ struct AddTransactionView: View {
 
     private var amountValue: Double? {
         CalculatorEngine.evaluate(amountExpression)
+    }
+
+    private var formattedMonthDay: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd"
+        return formatter.string(from: date)
+    }
+
+    private func scheduleDatePickerDismiss() {
+        dateDismissTask?.cancel()
+        dateDismissTask = Task { [showingDatePicker] in
+            guard showingDatePicker else { return }
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            if !Task.isCancelled {
+                await MainActor.run {
+                    self.showingDatePicker = false
+                }
+            }
+        }
     }
 
     private func save() {
