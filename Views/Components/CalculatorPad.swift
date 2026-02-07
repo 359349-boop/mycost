@@ -5,51 +5,47 @@ struct CalculatorPad: View {
     let isCompleteEnabled: Bool
     let onComplete: () -> Void
 
+    @State private var isDivideMode = false
+    @State private var isSubtractMode = false
+
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
                 calcButton("7") { append("7") }
                 calcButton("8") { append("8") }
                 calcButton("9") { append("9") }
-                opButton("÷") { appendOperator("÷") }
+                opToggleButton(isDivideMode ? "÷" : "×") {
+                    appendOperator(isDivideMode ? "÷" : "×")
+                } onDoubleTap: {
+                    isDivideMode.toggle()
+                    appendOperator(isDivideMode ? "÷" : "×")
+                }
             }
 
             HStack(spacing: 12) {
                 calcButton("4") { append("4") }
                 calcButton("5") { append("5") }
                 calcButton("6") { append("6") }
-                opButton("×") { appendOperator("×") }
+                opToggleButton(isSubtractMode ? "−" : "+") {
+                    appendOperator(isSubtractMode ? "-" : "+")
+                } onDoubleTap: {
+                    isSubtractMode.toggle()
+                    appendOperator(isSubtractMode ? "-" : "+")
+                }
             }
 
             HStack(spacing: 12) {
                 calcButton("1") { append("1") }
                 calcButton("2") { append("2") }
                 calcButton("3") { append("3") }
-                opButton("-") { appendOperator("-") }
+                funcButton("C") { clearAll() }
             }
 
             HStack(spacing: 12) {
                 calcButton("0") { append("0") }
                 calcButton(".") { appendDot() }
                 funcButton("⌫") { deleteLast() }
-                opButton("+") { appendOperator("+") }
-            }
-
-            HStack(spacing: 12) {
-                funcButton("C") { clearAll() }
-                funcButton("=") { applyEqual() }
-                Button {
-                    onComplete()
-                } label: {
-                    Text("完成")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(isCompleteEnabled ? Color.accentColor : Color.gray.opacity(0.3))
-                        .foregroundStyle(isCompleteEnabled ? .white : .secondary)
-                        .cornerRadius(14)
-                }
-                .disabled(!isCompleteEnabled)
+                completeButton
             }
         }
         .padding()
@@ -69,16 +65,31 @@ struct CalculatorPad: View {
         }
     }
 
-    private func opButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.title3)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color.accentColor.opacity(0.15))
-                .foregroundStyle(Color.accentColor)
-                .cornerRadius(14)
-        }
+    private func opToggleButton(
+        _ title: String,
+        onTap: @escaping () -> Void,
+        onDoubleTap: @escaping () -> Void
+    ) -> some View {
+        let gesture = TapGesture(count: 2)
+            .exclusively(before: TapGesture(count: 1))
+            .onEnded { value in
+                switch value {
+                case .first:
+                    onDoubleTap()
+                case .second:
+                    onTap()
+                }
+            }
+
+        return Text(title)
+            .font(.title3)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(Color.accentColor.opacity(0.15))
+            .foregroundStyle(Color.accentColor)
+            .cornerRadius(14)
+            .contentShape(Rectangle())
+            .gesture(gesture)
     }
 
     private func funcButton(_ title: String, action: @escaping () -> Void) -> some View {
@@ -91,6 +102,21 @@ struct CalculatorPad: View {
                 .foregroundStyle(.secondary)
                 .cornerRadius(14)
         }
+    }
+
+    private var completeButton: some View {
+        Button {
+            onComplete()
+        } label: {
+            Text("完成")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(isCompleteEnabled ? Color.accentColor : Color.gray.opacity(0.3))
+                .foregroundStyle(isCompleteEnabled ? .white : .secondary)
+                .cornerRadius(14)
+        }
+        .disabled(!isCompleteEnabled)
     }
 
     private func append(_ value: String) {
@@ -129,11 +155,6 @@ struct CalculatorPad: View {
     private func deleteLast() {
         guard !expression.isEmpty else { return }
         expression.removeLast()
-    }
-
-    private func applyEqual() {
-        guard let value = CalculatorEngine.evaluate(expression) else { return }
-        expression = CalculatorEngine.formatForInput(value)
     }
 
     private func currentNumber() -> String {

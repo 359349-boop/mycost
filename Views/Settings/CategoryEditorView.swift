@@ -1,5 +1,6 @@
-baoimport SwiftUI
+import SwiftUI
 import SwiftData
+import UIKit
 
 struct CategoryEditorView: View {
     @Environment(\.dismiss) private var dismiss
