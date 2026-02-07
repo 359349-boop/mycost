@@ -150,16 +150,24 @@ struct AddTransactionView: View {
     }
 
     private var amountDisplay: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(displayExpression)
-                .font(.largeTitle)
-                .fontWeight(.semibold)
-                .monospacedDigit()
-            if let value = amountValue {
-                Text(format(currency: value))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(displayExpression)
+                    .font(.largeTitle)
+                    .fontWeight(.semibold)
+                    .monospacedDigit()
+                if let value = amountValue {
+                    Text(format(currency: value))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
+            .padding(.top, 4)
+            .padding(.bottom, 0)
+
+            Divider()
+                .padding(.top, 1)
+
             noteRow
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -169,7 +177,11 @@ struct AddTransactionView: View {
         Group {
             if isEditingNote {
                 TextField("备注", text: $note)
-                    .textFieldStyle(.roundedBorder)
+                    .font(.footnote)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 8)
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .focused($noteFocused)
                     .submitLabel(.done)
                     .onSubmit { finishNoteEditing() }
@@ -179,16 +191,16 @@ struct AddTransactionView: View {
                     beginNoteEditing()
                 } label: {
                     HStack(spacing: 8) {
-                        Text("备注")
-                            .font(.caption)
-                            .padding(.vertical, 4)
-                            .padding(.horizontal, 8)
+                        Image(systemName: "note.text")
+                            .font(.caption2)
+                            .padding(4)
                             .background(Color(.secondarySystemBackground))
                             .clipShape(Capsule())
+                            .foregroundStyle(.secondary)
 
                         if !note.isEmpty {
                             Text(note)
-                                .font(.subheadline)
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                         }
@@ -197,7 +209,7 @@ struct AddTransactionView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.top, 6)
+        .padding(.top, 2)
     }
 
     private var categorySection: some View {
