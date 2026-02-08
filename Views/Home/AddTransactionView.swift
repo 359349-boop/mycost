@@ -6,7 +6,7 @@ struct AddTransactionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
 
-    @Query(sort: \Category.name) private var categories: [Category]
+    @Query(sort: \Category.sortIndex) private var categories: [Category]
 
     private let transaction: Transaction?
 

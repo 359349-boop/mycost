@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct CategoryListView: View {
-    @Query(sort: \Category.name) private var categories: [Category]
+    @Query(sort: \Category.sortIndex) private var categories: [Category]
     @Environment(\.modelContext) private var context
 
     @State private var showingAdd = false
@@ -24,15 +24,20 @@ struct CategoryListView: View {
                     CategoryIcon(iconName: category.iconName, colorHex: category.colorHex, size: 28, cornerRadius: 10)
                     Text(category.name)
                     Spacer()
-                    Text(category.type == "Expense" ? "支出" : "收入")
-                        .foregroundStyle(.secondary)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
                     editingCategory = category
                 }
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        delete(category)
+                    } label: {
+                        Text("删除")
+                    }
+                }
             }
-            .onDelete(perform: delete)
+            .onMove(perform: move)
         }
         .navigationTitle("分类管理")
         .toolbar {
@@ -44,6 +49,7 @@ struct CategoryListView: View {
                 }
             }
         }
+        .environment(\.editMode, .constant(.active))
         .sheet(isPresented: $showingAdd) {
             CategoryEditorView(type: filterType)
         }
@@ -56,8 +62,23 @@ struct CategoryListView: View {
         categories.filter { $0.type == filterType }
     }
 
-    private func delete(at offsets: IndexSet) {
-        let items = offsets.map { filtered[$0] }
-        items.forEach { context.delete($0) }
+    private func delete(_ category: Category) {
+        context.delete(category)
+        normalizeSortIndex()
+    }
+
+    private func move(from source: IndexSet, to destination: Int) {
+        var items = filtered
+        items.move(fromOffsets: source, toOffset: destination)
+        for (index, item) in items.enumerated() {
+            item.sortIndex = index
+        }
+    }
+
+    private func normalizeSortIndex() {
+        let items = filtered
+        for (index, item) in items.enumerated() {
+            item.sortIndex = index
+        }
     }
 }

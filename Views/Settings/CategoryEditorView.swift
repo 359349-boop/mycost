@@ -100,7 +100,16 @@ struct CategoryEditorView: View {
             existing.iconName = iconName
             existing.colorHex = colorHex
         } else {
-            let newCategory = Category(name: trimmed, iconName: iconName, colorHex: colorHex, type: type)
+            let nextIndex = (try? context.fetch(
+                FetchDescriptor<Category>(predicate: #Predicate { $0.type == type })
+            ).count) ?? 0
+            let newCategory = Category(
+                name: trimmed,
+                iconName: iconName,
+                colorHex: colorHex,
+                type: type,
+                sortIndex: nextIndex
+            )
             context.insert(newCategory)
         }
 

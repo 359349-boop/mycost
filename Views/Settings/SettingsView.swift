@@ -13,7 +13,7 @@ struct SettingsView: View {
             }
 
             Section("分类管理") {
-                NavigationLink("管理分类") {
+                NavigationLink("分类管理") {
                     CategoryListView()
                 }
             }
