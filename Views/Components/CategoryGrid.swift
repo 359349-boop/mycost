@@ -5,11 +5,13 @@ struct CategoryGrid: View {
     @Binding var selected: Category?
     let onAdd: () -> Void
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 72), spacing: 12)
-    ]
+    private let columns = Array(
+        repeating: GridItem(.flexible(minimum: 44), spacing: 12),
+        count: 5
+    )
 
     var body: some View {
+        let settingsColorHex = categories.first?.colorHex ?? "#8E8E93"
         LazyVGrid(columns: columns, spacing: 12) {
             ForEach(categories, id: \.id) { category in
                 CategoryGridItem(
@@ -24,10 +26,10 @@ struct CategoryGrid: View {
             }
 
             CategoryGridItem(
-                iconName: "plus",
-                title: "添加",
-                colorHex: "#0A84FF",
-                isSelected: true
+                iconName: "gearshape",
+                title: "设置",
+                colorHex: settingsColorHex,
+                isSelected: false
             )
             .onTapGesture {
                 onAdd()

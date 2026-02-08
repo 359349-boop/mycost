@@ -63,6 +63,13 @@ struct AddTransactionView: View {
                 if selectedCategory?.type != newValue {
                     selectedCategory = nil
                 }
+                ensureDefaultSelection()
+            }
+            .onChange(of: categories.count) { _, _ in
+                ensureDefaultSelection()
+            }
+            .onAppear {
+                ensureDefaultSelection()
             }
             .onChange(of: showingDatePicker) { _, newValue in
                 if !newValue {
@@ -213,7 +220,7 @@ struct AddTransactionView: View {
     }
 
     private var categorySection: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: false) {
             CategoryGrid(
                 categories: filteredCategories,
                 selected: $selectedCategory,
@@ -285,6 +292,11 @@ struct AddTransactionView: View {
         formatter.currencyCode = "CNY"
         formatter.maximumFractionDigits = 2
         return formatter.string(from: NSNumber(value: value)) ?? "¥0"
+    }
+
+    private func ensureDefaultSelection() {
+        guard selectedCategory == nil else { return }
+        selectedCategory = filteredCategories.first
     }
 
     private func beginNoteEditing() {
