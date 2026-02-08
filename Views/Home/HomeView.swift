@@ -19,15 +19,15 @@ private enum TransactionTypeFilter: String, CaseIterable, Identifiable {
 }
 
 private enum DateScope: String, CaseIterable, Identifiable {
-    case all
+    case year
     case month
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
-        case .all: return "全部"
-        case .month: return "本月"
+        case .year: return "年"
+        case .month: return "月"
         }
     }
 }
@@ -37,10 +37,12 @@ struct HomeView: View {
     @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
 
     @State private var editingTransaction: Transaction?
+    @GestureState private var dragOffset: CGFloat = 0
 
     @State private var searchText = ""
     @State private var typeFilter: TransactionTypeFilter = .all
-    @State private var dateScope: DateScope = .all
+    @State private var dateScope: DateScope = .month
+    @State private var currentPeriodDate: Date = .now
 
     private let viewModel = TransactionListViewModel()
 
@@ -53,6 +55,9 @@ struct HomeView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: dateScope) { _, _ in
+            currentPeriodDate = .now
+        }
         .sheet(item: $editingTransaction) { txn in
             AddTransactionView(transaction: txn)
         }
@@ -66,6 +71,10 @@ struct HomeView: View {
                 listView
             }
         }
+        .contentShape(Rectangle())
+        .offset(x: dragOffset)
+        .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1), value: dragOffset)
+        .simultaneousGesture(periodSwipeGesture)
     }
 
     private var emptyStateView: some View {
@@ -132,7 +141,7 @@ struct HomeView: View {
                     }
                 } header: {
                     HStack {
-                        Text(section.date, format: .dateTime.month().day())
+                        Text(formattedSectionDate(section.date))
                         Spacer()
                         Text(netAmountText(section.netTotal))
                             .font(.subheadline)
@@ -146,7 +155,7 @@ struct HomeView: View {
     }
 
     private var filterBar: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Picker("类型", selection: $typeFilter) {
                 ForEach(TransactionTypeFilter.allCases) { item in
                     Text(item.label).tag(item)
@@ -156,7 +165,7 @@ struct HomeView: View {
 
             Picker("时间", selection: $dateScope) {
                 ForEach(DateScope.allCases) { item in
-                    Text(item.label).tag(item)
+                    Text(scopeLabel(for: item)).tag(item)
                 }
             }
             .pickerStyle(.segmented)
@@ -166,6 +175,10 @@ struct HomeView: View {
     }
 
     private var filteredTransactions: [Transaction] {
+        filteredTransactions(for: currentPeriodDate)
+    }
+
+    private func filteredTransactions(for periodDate: Date) -> [Transaction] {
         var result = transactions
 
         switch typeFilter {
@@ -178,11 +191,15 @@ struct HomeView: View {
         }
 
         switch dateScope {
-        case .all:
-            break
+        case .year:
+            let calendar = Calendar.current
+            let targetYear = calendar.component(.year, from: periodDate)
+            result = result.filter {
+                calendar.component(.year, from: $0.date) == targetYear
+            }
         case .month:
             let calendar = Calendar.current
-            let comps = calendar.dateComponents([.year, .month], from: .now)
+            let comps = calendar.dateComponents([.year, .month], from: periodDate)
             result = result.filter {
                 let item = calendar.dateComponents([.year, .month], from: $0.date)
                 return item.year == comps.year && item.month == comps.month
@@ -206,6 +223,80 @@ struct HomeView: View {
         let items = indexSet.map { section.transactions[$0] }
         items.forEach { context.delete($0) }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    private func shiftPeriod(forward: Bool) {
+        let calendar = Calendar.current
+        let value = forward ? 1 : -1
+        let candidate: Date
+        switch dateScope {
+        case .year:
+            candidate = calendar.date(byAdding: .year, value: value, to: currentPeriodDate) ?? currentPeriodDate
+        case .month:
+            candidate = calendar.date(byAdding: .month, value: value, to: currentPeriodDate) ?? currentPeriodDate
+        }
+
+        guard !filteredTransactions(for: candidate).isEmpty else { return }
+        withAnimation(.easeInOut(duration: 0.25)) {
+            currentPeriodDate = candidate
+        }
+    }
+
+    private var periodSwipeGesture: some Gesture {
+        DragGesture()
+            .updating($dragOffset) { value, state, _ in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+                guard abs(horizontal) > abs(vertical) else {
+                    state = 0
+                    return
+                }
+                state = horizontal * 0.25
+            }
+            .onEnded { value in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+                guard abs(horizontal) > abs(vertical), abs(horizontal) > 80 else { return }
+                if horizontal < 0 {
+                    shiftPeriod(forward: true)
+                } else {
+                    shiftPeriod(forward: false)
+                }
+            }
+    }
+
+    private func scopeLabel(for item: DateScope) -> String {
+        guard item == dateScope else { return item.label }
+        guard !isCurrentPeriod else { return item.label }
+        return formattedPeriodLabel(for: currentPeriodDate, scope: item)
+    }
+
+    private var isCurrentPeriod: Bool {
+        let calendar = Calendar.current
+        switch dateScope {
+        case .year:
+            return calendar.isDate(currentPeriodDate, equalTo: .now, toGranularity: .year)
+        case .month:
+            return calendar.isDate(currentPeriodDate, equalTo: .now, toGranularity: .month)
+        }
+    }
+
+    private func formattedPeriodLabel(for date: Date, scope: DateScope) -> String {
+        let formatter = DateFormatter()
+        switch scope {
+        case .year:
+            formatter.dateFormat = "yyyy年"
+        case .month:
+            formatter.dateFormat = "yyyy年MM月"
+        }
+        return formatter.string(from: date)
+    }
+
+    private func formattedSectionDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MMM dd"
+        return formatter.string(from: date)
     }
 
     private func netAmountText(_ value: Decimal) -> String {
