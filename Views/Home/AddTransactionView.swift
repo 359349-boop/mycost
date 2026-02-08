@@ -25,6 +25,7 @@ struct AddTransactionView: View {
     @State private var digitWidth: CGFloat = 0
 
     private let amountScrollId = "amountScrollId"
+    private let amountResultMaxWidth: CGFloat = 140
 
     init(transaction: Transaction? = nil) {
         self.transaction = transaction
@@ -183,6 +184,10 @@ struct AddTransactionView: View {
                 Text(format(currency: amountValue ?? 0))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.head)
+                    .frame(maxWidth: amountResultMaxWidth, alignment: .trailing)
+                    .multilineTextAlignment(.trailing)
                     .opacity(amountValue == nil ? 0 : 1)
                     .accessibilityHidden(amountValue == nil)
             }
