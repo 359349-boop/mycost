@@ -39,7 +39,9 @@
 
 ### 4.2 外观适配
 - 使用系统语义色与资产色，默认跟随系统深浅色。
-- 不强制设置 `preferredColorScheme`。
+- 主题设置：支持「跟随系统 / 浅色 / 深色」。
+  - 持久化：`AppStorage`，key 为 `app_theme`，默认 `system`（跟随系统）。
+  - 应用策略：仅在用户选择浅色/深色时设置 `preferredColorScheme`；选择跟随系统时不覆盖（传 `nil`）。
 
 ## 5. 项目目录结构
 ```text

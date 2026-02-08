@@ -3,50 +3,54 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		05B1E0365BF52D116782FA85 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABB102B06F18C91F36C191E2 /* SettingsView.swift */; };
 		0A6EFBA8B7AD90B682EA787D /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64BBE8D8C101B00012CC4C6E /* CategoryListView.swift */; };
-		0F360E3B2F36DD7C005B4FB2 /* CategoryGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F360E382F36DD7C005B4FB2 /* CategoryGrid.swift */; };
-		0F360E3C2F36DD7C005B4FB2 /* CategoryIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F360E392F36DD7C005B4FB2 /* CategoryIcon.swift */; };
-		0F360E3D2F36DD7C005B4FB2 /* ColorHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F360E3A2F36DD7C005B4FB2 /* ColorHex.swift */; };
-		0F360E3F2F36DE26005B4FB2 /* CategoryEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F360E3E2F36DE26005B4FB2 /* CategoryEditorView.swift */; };
-		0F52928B2F36CE110092F38A /* CalculatorPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F52928A2F36CE110092F38A /* CalculatorPad.swift */; };
 		1F93BE179B61C58CA49294DA /* AddTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05B9C455E77044F21D35710 /* AddTransactionView.swift */; };
 		24713CB2134F2A777BB3A049 /* CategorySeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D9E9143DC98BB4CE06B5B3 /* CategorySeeder.swift */; };
 		292FCF5434F41B27B4BF819D /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AFD4393B744921B73CE0C3 /* StatsView.swift */; };
+		3744ABF83C481F1B1151FEF3 /* CategoryEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2A8502ADF17D4C7DE3009D /* CategoryEditorView.swift */; };
+		43996013C8547CFEDE9C594E /* ColorHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4F2608403582F2362DAFA3 /* ColorHex.swift */; };
 		44AECAC4594630F4BFFA6F0B /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9222274689A1F21463539972 /* HomeView.swift */; };
 		472B6CFB2E62037F27D0A1CD /* TransactionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934EFB35AAF13579BDE12451 /* TransactionRow.swift */; };
 		47CEDFED783C8F5F4B0B27C2 /* MyCostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 556FCBAA5DA21FED74DAF018 /* MyCostApp.swift */; };
 		5F4219FA06781C925283AA0B /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6A458724594ED964D3CD3 /* EmptyStateView.swift */; };
+		7146917C7F76DC026EACA3A1 /* CategoryGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D546B6358EDCAFD988BCF22 /* CategoryGrid.swift */; };
 		77B27C684323F7E6FDBBD727 /* StatSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61D04F0CDC90102883AE54E /* StatSummaryCard.swift */; };
+		77E61CAB6E038A59229F27B6 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2E93D581CAAD477A25E511 /* AppTheme.swift */; };
 		78AE3D8203624E5261172D2D /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40272634EBF26B8CA3B8B676 /* Transaction.swift */; };
+		7B680C06103E5341310A8BB6 /* CalculatorPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4F94F7EBE464022E966241 /* CalculatorPad.swift */; };
 		8C4FC1619331925109AA84CA /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBAA52024439FC1B97333F6 /* Category.swift */; };
 		B1C7FFAA27D577DC2D657C24 /* TransactionListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C28987122E52AE722D0724 /* TransactionListViewModel.swift */; };
 		D18C4C88AB6BF6C23F3E6AC8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3CE94280CEEBCF7337B09E7 /* RootView.swift */; };
+		E1FB0AF10007542988256997 /* ThemeSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677AC634128EC6B8D74971E4 /* ThemeSelectionView.swift */; };
 		E81C3E98EB228EA9701A7AA8 /* StatsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441B5A139629470107082821 /* StatsViewModel.swift */; };
+		EE7FF63A535F22F559D0BEE7 /* CategoryIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 084E8B9A9187382EA90DB130 /* CategoryIcon.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0F360E382F36DD7C005B4FB2 /* CategoryGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryGrid.swift; sourceTree = "<group>"; };
-		0F360E392F36DD7C005B4FB2 /* CategoryIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryIcon.swift; sourceTree = "<group>"; };
-		0F360E3A2F36DD7C005B4FB2 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
-		0F360E3E2F36DE26005B4FB2 /* CategoryEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEditorView.swift; sourceTree = "<group>"; };
-		0F52928A2F36CE110092F38A /* CalculatorPad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorPad.swift; sourceTree = "<group>"; };
+		084E8B9A9187382EA90DB130 /* CategoryIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryIcon.swift; sourceTree = "<group>"; };
+		0B2A8502ADF17D4C7DE3009D /* CategoryEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEditorView.swift; sourceTree = "<group>"; };
+		1D546B6358EDCAFD988BCF22 /* CategoryGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryGrid.swift; sourceTree = "<group>"; };
 		27D6A458724594ED964D3CD3 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		2B4F2608403582F2362DAFA3 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
+		3D4F94F7EBE464022E966241 /* CalculatorPad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorPad.swift; sourceTree = "<group>"; };
 		40272634EBF26B8CA3B8B676 /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 		441B5A139629470107082821 /* StatsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsViewModel.swift; sourceTree = "<group>"; };
 		556FCBAA5DA21FED74DAF018 /* MyCostApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyCostApp.swift; sourceTree = "<group>"; };
 		64BBE8D8C101B00012CC4C6E /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
+		677AC634128EC6B8D74971E4 /* ThemeSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSelectionView.swift; sourceTree = "<group>"; };
 		77D9E9143DC98BB4CE06B5B3 /* CategorySeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategorySeeder.swift; sourceTree = "<group>"; };
-		80B4483A3B54BF04E4A64D8F /* MyCost.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyCost.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		80B4483A3B54BF04E4A64D8F /* MyCost.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MyCost.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9222274689A1F21463539972 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		934EFB35AAF13579BDE12451 /* TransactionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionRow.swift; sourceTree = "<group>"; };
 		93C28987122E52AE722D0724 /* TransactionListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionListViewModel.swift; sourceTree = "<group>"; };
 		ABB102B06F18C91F36C191E2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B05B9C455E77044F21D35710 /* AddTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTransactionView.swift; sourceTree = "<group>"; };
+		BE2E93D581CAAD477A25E511 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		C3CE94280CEEBCF7337B09E7 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		D8AFD4393B744921B73CE0C3 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		DEBAA52024439FC1B97333F6 /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
@@ -57,6 +61,7 @@
 		0B06E2F5804790DC7DFC18C8 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				BE2E93D581CAAD477A25E511 /* AppTheme.swift */,
 				441B5A139629470107082821 /* StatsViewModel.swift */,
 				93C28987122E52AE722D0724 /* TransactionListViewModel.swift */,
 			);
@@ -74,9 +79,10 @@
 		44F68120798FCB59C02DAAAF /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				0F360E3E2F36DE26005B4FB2 /* CategoryEditorView.swift */,
+				0B2A8502ADF17D4C7DE3009D /* CategoryEditorView.swift */,
 				64BBE8D8C101B00012CC4C6E /* CategoryListView.swift */,
 				ABB102B06F18C91F36C191E2 /* SettingsView.swift */,
+				677AC634128EC6B8D74971E4 /* ThemeSelectionView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -126,10 +132,10 @@
 		D0D916F435D8FD307A989F33 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				0F360E382F36DD7C005B4FB2 /* CategoryGrid.swift */,
-				0F360E392F36DD7C005B4FB2 /* CategoryIcon.swift */,
-				0F360E3A2F36DD7C005B4FB2 /* ColorHex.swift */,
-				0F52928A2F36CE110092F38A /* CalculatorPad.swift */,
+				3D4F94F7EBE464022E966241 /* CalculatorPad.swift */,
+				1D546B6358EDCAFD988BCF22 /* CategoryGrid.swift */,
+				084E8B9A9187382EA90DB130 /* CategoryIcon.swift */,
+				2B4F2608403582F2362DAFA3 /* ColorHex.swift */,
 				27D6A458724594ED964D3CD3 /* EmptyStateView.swift */,
 				F61D04F0CDC90102883AE54E /* StatSummaryCard.swift */,
 				934EFB35AAF13579BDE12451 /* TransactionRow.swift */,
@@ -180,7 +186,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					FADFF9C85ADD58A38E8B65C4 = {
 						DevelopmentTeam = "";
@@ -198,6 +204,7 @@
 			);
 			mainGroup = 93EEFE71B3927EA8B1878F97;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -212,23 +219,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F93BE179B61C58CA49294DA /* AddTransactionView.swift in Sources */,
+				77E61CAB6E038A59229F27B6 /* AppTheme.swift in Sources */,
+				7B680C06103E5341310A8BB6 /* CalculatorPad.swift in Sources */,
 				8C4FC1619331925109AA84CA /* Category.swift in Sources */,
+				3744ABF83C481F1B1151FEF3 /* CategoryEditorView.swift in Sources */,
+				7146917C7F76DC026EACA3A1 /* CategoryGrid.swift in Sources */,
+				EE7FF63A535F22F559D0BEE7 /* CategoryIcon.swift in Sources */,
 				0A6EFBA8B7AD90B682EA787D /* CategoryListView.swift in Sources */,
-				0F360E3B2F36DD7C005B4FB2 /* CategoryGrid.swift in Sources */,
-				0F360E3C2F36DD7C005B4FB2 /* CategoryIcon.swift in Sources */,
-				0F360E3D2F36DD7C005B4FB2 /* ColorHex.swift in Sources */,
 				24713CB2134F2A777BB3A049 /* CategorySeeder.swift in Sources */,
+				43996013C8547CFEDE9C594E /* ColorHex.swift in Sources */,
 				5F4219FA06781C925283AA0B /* EmptyStateView.swift in Sources */,
 				44AECAC4594630F4BFFA6F0B /* HomeView.swift in Sources */,
 				47CEDFED783C8F5F4B0B27C2 /* MyCostApp.swift in Sources */,
 				D18C4C88AB6BF6C23F3E6AC8 /* RootView.swift in Sources */,
-				0F360E3F2F36DE26005B4FB2 /* CategoryEditorView.swift in Sources */,
 				05B1E0365BF52D116782FA85 /* SettingsView.swift in Sources */,
 				77B27C684323F7E6FDBBD727 /* StatSummaryCard.swift in Sources */,
 				292FCF5434F41B27B4BF819D /* StatsView.swift in Sources */,
 				E81C3E98EB228EA9701A7AA8 /* StatsViewModel.swift in Sources */,
+				E1FB0AF10007542988256997 /* ThemeSelectionView.swift in Sources */,
 				78AE3D8203624E5261172D2D /* Transaction.swift in Sources */,
-				0F52928B2F36CE110092F38A /* CalculatorPad.swift in Sources */,
 				B1C7FFAA27D577DC2D657C24 /* TransactionListViewModel.swift in Sources */,
 				472B6CFB2E62037F27D0A1CD /* TransactionRow.swift in Sources */,
 			);
@@ -293,7 +302,6 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -309,7 +317,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.mycost;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -356,7 +363,6 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -379,7 +385,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.mycost;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

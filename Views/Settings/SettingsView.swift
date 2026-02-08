@@ -1,14 +1,20 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @AppStorage("app_theme") private var appThemeRaw: String = AppTheme.system.rawValue
+
     var body: some View {
         List {
             Section("外观") {
-                HStack {
-                    Text("主题")
-                    Spacer()
-                    Text("跟随系统")
-                        .foregroundStyle(.secondary)
+                NavigationLink {
+                    ThemeSelectionView()
+                } label: {
+                    HStack {
+                        Text("主题")
+                        Spacer()
+                        Text(appTheme.displayName)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -34,5 +40,9 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("我的")
+    }
+
+    private var appTheme: AppTheme {
+        AppTheme(rawValue: appThemeRaw) ?? .system
     }
 }

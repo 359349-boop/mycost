@@ -3,6 +3,8 @@ import SwiftData
 
 @main
 struct MyCostApp: App {
+    @AppStorage("app_theme") private var appThemeRaw: String = AppTheme.system.rawValue
+
     private var sharedModelContainer: ModelContainer = {
         let schema = Schema([Transaction.self, Category.self])
 
@@ -23,7 +25,12 @@ struct MyCostApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .preferredColorScheme(appTheme.colorScheme)
         }
         .modelContainer(sharedModelContainer)
+    }
+
+    private var appTheme: AppTheme {
+        AppTheme(rawValue: appThemeRaw) ?? .system
     }
 }
