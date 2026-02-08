@@ -208,7 +208,7 @@ struct AddTransactionView: View {
                         .monospacedDigit()
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
-                        .padding(.trailing, amountTrailingPadding)
+                        .padding(.leading, amountTrailingPadding)
                         .id(amountScrollId)
                 }
                 .onAppear { scrollAmountToTrailing(proxy) }
@@ -242,6 +242,11 @@ struct AddTransactionView: View {
                     }
                 )
                 .hidden()
+        }
+        .overlay(alignment: .leading) {
+            Color(.secondarySystemBackground)
+                .frame(width: 8)
+                .allowsHitTesting(false)
         }
     }
 
