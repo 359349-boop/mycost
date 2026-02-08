@@ -30,11 +30,14 @@ struct TransactionRow: View {
     }
 
     private var amountText: String {
-        let number = NSDecimalNumber(decimal: transaction.amount)
+        let rawNumber = NSDecimalNumber(decimal: transaction.amount)
+        let number = NSDecimalNumber(value: abs(rawNumber.doubleValue))
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "CNY"
         formatter.maximumFractionDigits = 2
-        return formatter.string(from: number) ?? "¥0"
+        let formatted = formatter.string(from: number) ?? "¥0"
+        let sign = transaction.type == "Expense" ? "-" : "+"
+        return "\(sign)\(formatted)"
     }
 }

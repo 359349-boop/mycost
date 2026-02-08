@@ -36,7 +36,6 @@ struct HomeView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
 
-    @State private var showingAdd = false
     @State private var editingTransaction: Transaction?
 
     @State private var searchText = ""
@@ -47,23 +46,13 @@ struct HomeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            headerBar
+            searchBar
             filterBar
             contentView
         }
-        .navigationTitle("账本")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showingAdd = true
-                } label: {
-                    Image(systemName: "plus")
-                }
-            }
-        }
-        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .automatic))
-        .sheet(isPresented: $showingAdd) {
-            AddTransactionView()
-        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $editingTransaction) { txn in
             AddTransactionView(transaction: txn)
         }
@@ -87,6 +76,45 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField("搜索", text: $searchText)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+    }
+
+    private var headerBar: some View {
+        HStack(alignment: .center) {
+            Text("账本")
+                .font(.title)
+                .fontWeight(.bold)
+
+            Spacer()
+
+            NavigationLink {
+                SettingsView()
+            } label: {
+                Image(systemName: "person.crop.circle")
+                    .font(.title)
+                    .foregroundStyle(.tint)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .background(Color(.systemBackground))
+    }
+
     private var listView: some View {
         let sections = viewModel.sections(from: filteredTransactions)
         return List {
@@ -103,11 +131,18 @@ struct HomeView: View {
                         delete(in: section, at: indexSet)
                     }
                 } header: {
-                    Text(section.date, format: .dateTime.month().day())
+                    HStack {
+                        Text(section.date, format: .dateTime.month().day())
+                        Spacer()
+                        Text(netAmountText(section.netTotal))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }
         .listStyle(.insetGrouped)
+        .listSectionSpacing(6)
     }
 
     private var filterBar: some View {
@@ -171,5 +206,18 @@ struct HomeView: View {
         let items = indexSet.map { section.transactions[$0] }
         items.forEach { context.delete($0) }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    private func netAmountText(_ value: Decimal) -> String {
+        let number = NSDecimalNumber(decimal: value)
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "CNY"
+        formatter.maximumFractionDigits = 2
+        let formatted = formatter.string(from: NSNumber(value: abs(number.doubleValue))) ?? "¥0"
+        if number == 0 {
+            return formatted
+        }
+        return number.doubleValue < 0 ? "-\(formatted)" : "+\(formatted)"
     }
 }

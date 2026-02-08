@@ -5,6 +5,7 @@ struct TransactionDaySection: Identifiable {
     let id = UUID()
     let date: Date
     let transactions: [Transaction]
+    let netTotal: Decimal
 }
 
 @Observable
@@ -15,7 +16,13 @@ final class TransactionListViewModel {
         }
 
         return grouped
-            .map { TransactionDaySection(date: $0.key, transactions: $0.value) }
+            .map { key, value in
+                let net = value.reduce(Decimal.zero) { result, txn in
+                    let signed = txn.type == "Expense" ? -txn.amount : txn.amount
+                    return result + signed
+                }
+                return TransactionDaySection(date: key, transactions: value, netTotal: net)
+            }
             .sorted { $0.date > $1.date }
     }
 }

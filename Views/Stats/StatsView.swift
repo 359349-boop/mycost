@@ -7,22 +7,40 @@ struct StatsView: View {
     private let viewModel = StatsViewModel()
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                summaryRow
-                changeRow
+        VStack(spacing: 0) {
+            headerBar
+            ScrollView {
+                VStack(spacing: 16) {
+                    summaryRow
+                    changeRow
 
-                if transactions.isEmpty {
-                    EmptyStateView(title: "暂无统计", message: "记录几笔后查看趋势")
-                } else {
-                    monthlyChart
-                    categoryChart
-                    topCategoryList
+                    if transactions.isEmpty {
+                        EmptyStateView(title: "暂无统计", message: "记录几笔后查看趋势")
+                    } else {
+                        monthlyChart
+                        categoryChart
+                        topCategoryList
+                    }
                 }
+                .padding()
             }
-            .padding()
         }
-        .navigationTitle("统计")
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var headerBar: some View {
+        HStack(alignment: .center) {
+            Text("统计")
+                .font(.title)
+                .fontWeight(.bold)
+
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .background(Color(.systemBackground))
     }
 
     private var summaryRow: some View {
