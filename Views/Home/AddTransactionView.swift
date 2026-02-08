@@ -21,6 +21,10 @@ struct AddTransactionView: View {
     @State private var dateDismissTask: Task<Void, Never>?
     @State private var isEditingNote = false
     @FocusState private var noteFocused: Bool
+    @State private var amountContainerWidth: CGFloat = 0
+    @State private var digitWidth: CGFloat = 0
+
+    private let amountScrollId = "amountScrollId"
 
     init(transaction: Transaction? = nil) {
         self.transaction = transaction
@@ -108,7 +112,7 @@ struct AddTransactionView: View {
     }
 
     private var formContent: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 16) {
                 GroupBox {
                     HStack(spacing: 12) {
@@ -150,73 +154,139 @@ struct AddTransactionView: View {
                 } label: {
                     EmptyView()
                 }
+                .groupBoxStyle(
+                    TightGroupBoxStyle(
+                        insets: EdgeInsets(top: 5, leading: 16, bottom: 6, trailing: 16)
+                    )
+                )
             }
             .padding()
             .padding(.bottom, 120)
         }
+        .scrollIndicators(.hidden)
     }
 
     private var amountDisplay: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(displayExpression)
-                    .font(.largeTitle)
-                    .fontWeight(.semibold)
-                    .monospacedDigit()
-                if let value = amountValue {
-                    Text(format(currency: value))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 8) {
+                Spacer(minLength: 8)
+                amountExpressionLine
             }
-            .padding(.top, 4)
-            .padding(.bottom, 0)
 
             Divider()
                 .padding(.top, 1)
 
-            noteRow
+            HStack(alignment: .center, spacing: 12) {
+                noteInlineView
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Text(format(currency: amountValue ?? 0))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .opacity(amountValue == nil ? 0 : 1)
+                    .accessibilityHidden(amountValue == nil)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var noteRow: some View {
-        Group {
-            if isEditingNote {
-                TextField("备注", text: $note)
-                    .font(.footnote)
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 8)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .focused($noteFocused)
-                    .submitLabel(.done)
-                    .onSubmit { finishNoteEditing() }
-                    .onAppear { noteFocused = true }
-            } else {
-                Button {
-                    beginNoteEditing()
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "note.text")
-                            .font(.caption2)
-                            .padding(4)
-                            .background(Color(.secondarySystemBackground))
-                            .clipShape(Capsule())
-                            .foregroundStyle(.secondary)
+    private var amountExpressionLine: some View {
+        ViewThatFits(in: .horizontal) {
+            Text(displayExpression)
+                .font(.largeTitle)
+                .fontWeight(.semibold)
+                .monospacedDigit()
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .frame(maxWidth: .infinity, alignment: .trailing)
 
-                        if !note.isEmpty {
-                            Text(note)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
-                    }
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    Text(displayExpression)
+                        .font(.largeTitle)
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .padding(.trailing, amountTrailingPadding)
+                        .id(amountScrollId)
                 }
-                .buttonStyle(.plain)
+                .onAppear { scrollAmountToTrailing(proxy) }
+                .onChange(of: displayExpression) { _, _ in
+                    scrollAmountToTrailing(proxy)
+                }
             }
         }
-        .padding(.top, 2)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .background(
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear { amountContainerWidth = proxy.size.width }
+                    .onChange(of: proxy.size.width) { _, newValue in
+                        amountContainerWidth = newValue
+                    }
+            }
+        )
+        .overlay(alignment: .topLeading) {
+            Text("0")
+                .font(.largeTitle)
+                .fontWeight(.semibold)
+                .monospacedDigit()
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear { digitWidth = proxy.size.width }
+                            .onChange(of: proxy.size.width) { _, newValue in
+                                digitWidth = newValue
+                            }
+                    }
+                )
+                .hidden()
+        }
+    }
+
+    private var noteInlineView: some View {
+        HStack(spacing: 6) {
+            noteIconButton
+
+            if isEditingNote {
+                noteInlineEditor
+            } else if !notePreview.isEmpty {
+                Text(notePreview)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private var noteIconButton: some View {
+        Button {
+            beginNoteEditing()
+        } label: {
+            Image(systemName: "note.text")
+                .font(.caption2)
+                .padding(6)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(Capsule())
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .disabled(isEditingNote)
+    }
+
+    private var noteInlineEditor: some View {
+        TextField("备注", text: $note)
+            .font(.footnote)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 8)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .focused($noteFocused)
+            .submitLabel(.done)
+            .onSubmit { finishNoteEditing() }
+            .onAppear { noteFocused = true }
+            .frame(width: 120)
     }
 
     private var categorySection: some View {
@@ -239,6 +309,21 @@ struct AddTransactionView: View {
 
     private var amountValue: Double? {
         CalculatorEngine.evaluate(amountExpression)
+    }
+
+    private var amountTrailingPadding: CGFloat {
+        guard digitWidth > 0, amountContainerWidth > 0 else { return 0 }
+        let remainder = amountContainerWidth.truncatingRemainder(dividingBy: digitWidth)
+        return remainder == 0 ? 0 : remainder
+    }
+
+    private var notePreview: String {
+        let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        if trimmed.count <= 10 {
+            return trimmed
+        }
+        return String(trimmed.prefix(10)) + "…"
     }
 
     private var formattedMonthDay: String {
@@ -307,5 +392,31 @@ struct AddTransactionView: View {
     private func finishNoteEditing() {
         noteFocused = false
         isEditingNote = false
+    }
+
+    private func scrollAmountToTrailing(_ proxy: ScrollViewProxy) {
+        DispatchQueue.main.async {
+            proxy.scrollTo(amountScrollId, anchor: .trailing)
+        }
+    }
+}
+
+private struct TightGroupBoxStyle: GroupBoxStyle {
+    let insets: EdgeInsets
+    var cornerRadius: CGFloat = 16
+
+    func makeBody(configuration: Configuration) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            configuration.content
+        }
+        .padding(insets)
+        .background(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(Color(.separator).opacity(0.15), lineWidth: 1)
+        )
     }
 }
