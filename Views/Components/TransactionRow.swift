@@ -4,11 +4,11 @@ struct TransactionRow: View {
     let transaction: Transaction
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: transaction.category?.iconName ?? "tag")
-                .frame(width: 28, height: 28)
-                .background(Color(.secondarySystemBackground))
-                .clipShape(Circle())
+        let iconName = transaction.category?.iconName ?? "tag"
+        let colorHex = transaction.category?.colorHex ?? "#0A84FF"
+
+        return HStack(spacing: 12) {
+            CategoryIcon(iconName: iconName, colorHex: colorHex, size: 32, cornerRadius: 10)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(transaction.category?.name ?? "未分类")

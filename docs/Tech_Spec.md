@@ -28,7 +28,7 @@
 - `id: UUID`
 - `name: String`
 - `iconName: String` (SF Symbols)
-- `colorName: String`（语义色或资源名）
+- `colorHex: String`（Hex 格式，e.g. "#RRGGBB"）
 - `type: String` (Income / Expense)
 
 ## 4. 关键技术实现
@@ -52,3 +52,17 @@
 /Services    - iCloud Sync Services
 /Resources   - Assets, Localization
 ```
+
+## 6. Icon Color System (图标颜色规范)
+
+### 6.1 存储格式
+- 所有的 Category 颜色统一使用 Hex 格式存储：`String` (e.g., "#RRGGBB")。
+
+### 6.2 预设色值 (App Preset Palette)
+系统应内置至少 10 种预设色值，采用 iOS System Colors 的广色域标准：
+- Red: #FF453A, Orange: #FF9F0A, Yellow: #FFD60A, Green: #32D74B, Mint: #63E6E2, Teal: #64D2FF, Blue: #0A84FF, Indigo: #5E5CE6, Purple: #BF5AF2, Pink: #FF375F.
+
+### 6.3 渲染逻辑 (Dark Mode Adaptation)
+- 浅色模式：图标背景使用 `Color(hex)`（100% 不透明度），图标本身使用白色。
+- 深色模式：图标背景使用 `Color(hex)`（100% 不透明度），图标本身保持白色。
+- 通过“彩色底 + 白色图标”形成清晰对比。
