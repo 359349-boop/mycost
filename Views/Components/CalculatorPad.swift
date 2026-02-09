@@ -42,9 +42,9 @@ struct CalculatorPad: View {
             }
 
             HStack(spacing: 12) {
+                funcButton("⌫") { deleteLast() }
                 calcButton("0") { append("0") }
                 calcButton(".") { appendDot() }
-                funcButton("⌫") { deleteLast() }
                 completeButton
             }
         }

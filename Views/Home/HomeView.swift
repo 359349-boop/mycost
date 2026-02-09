@@ -38,6 +38,7 @@ struct HomeView: View {
 
     @State private var editingTransaction: Transaction?
     @GestureState private var dragOffset: CGFloat = 0
+    @State private var previewPeriodDate: Date?
 
     @State private var searchText = ""
     @State private var typeFilter: TransactionTypeFilter = .all
@@ -57,6 +58,7 @@ struct HomeView: View {
         .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
         .onChange(of: dateScope) { _, _ in
             currentPeriodDate = .now
+            previewPeriodDate = nil
         }
         .sheet(item: $editingTransaction) { txn in
             AddTransactionView(transaction: txn)
@@ -73,7 +75,26 @@ struct HomeView: View {
         }
         .contentShape(Rectangle())
         .offset(x: dragOffset)
-        .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1), value: dragOffset)
+        .animation(.interactiveSpring(response: 0.32, dampingFraction: 0.82, blendDuration: 0.12), value: dragOffset)
+        .simultaneousGesture(periodSwipeGesture)
+        .overlay {
+            HStack(spacing: 0) {
+                LinearGradient(
+                    colors: [Color(.systemBackground).opacity(0.45), .clear],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 16)
+                Spacer()
+                LinearGradient(
+                    colors: [.clear, Color(.systemBackground).opacity(0.45)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 16)
+            }
+            .allowsHitTesting(false)
+        }
     }
 
     private var emptyStateView: some View {
@@ -127,8 +148,6 @@ struct HomeView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    .contentShape(Rectangle())
-                    .highPriorityGesture(periodSwipeGesture)
                 }
             }
         }
@@ -227,9 +246,20 @@ struct HomeView: View {
                     state = 0
                     return
                 }
-                state = horizontal * 0.25
+                let forward = horizontal < 0
+                let candidate = candidatePeriodDate(forward: forward)
+                let canShift = candidate.map { !filteredTransactions(for: $0).isEmpty } ?? false
+                let factor: CGFloat = canShift ? 0.25 : 0.12
+                state = horizontal * factor
+
+                if abs(horizontal) > 24, let candidate, canShift {
+                    previewPeriodDate = candidate
+                } else {
+                    previewPeriodDate = nil
+                }
             }
             .onEnded { value in
+                defer { previewPeriodDate = nil }
                 let horizontal = value.translation.width
                 let vertical = value.translation.height
                 guard abs(horizontal) > abs(vertical), abs(horizontal) > 80 else { return }
@@ -243,6 +273,9 @@ struct HomeView: View {
 
     private func scopeLabel(for item: DateScope) -> String {
         guard item == dateScope else { return item.label }
+        if let preview = previewPeriodDate {
+            return formattedPeriodLabel(for: preview, scope: item)
+        }
         guard !isCurrentPeriod else { return item.label }
         return formattedPeriodLabel(for: currentPeriodDate, scope: item)
     }
@@ -266,6 +299,17 @@ struct HomeView: View {
             formatter.dateFormat = "yyyy年MM月"
         }
         return formatter.string(from: date)
+    }
+
+    private func candidatePeriodDate(forward: Bool) -> Date? {
+        let calendar = Calendar.current
+        let value = forward ? 1 : -1
+        switch dateScope {
+        case .year:
+            return calendar.date(byAdding: .year, value: value, to: currentPeriodDate)
+        case .month:
+            return calendar.date(byAdding: .month, value: value, to: currentPeriodDate)
+        }
     }
 
     private func formattedSectionDate(_ date: Date) -> String {
