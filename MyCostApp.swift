@@ -26,11 +26,28 @@ struct MyCostApp: App {
         WindowGroup {
             RootView()
                 .preferredColorScheme(appTheme.colorScheme)
+                .onAppear { configureTabBarAppearance() }
         }
         .modelContainer(sharedModelContainer)
     }
 
     private var appTheme: AppTheme {
         AppTheme(rawValue: appThemeRaw) ?? .system
+    }
+
+    private func configureTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor.systemBackground
+        appearance.stackedLayoutAppearance.normal.iconColor = .secondaryLabel
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: UIColor.secondaryLabel
+        ]
+        appearance.stackedLayoutAppearance.selected.iconColor = .label
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: UIColor.label
+        ]
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 }
