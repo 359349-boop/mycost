@@ -47,7 +47,16 @@ struct RootView: View {
                     .clipShape(Circle())
                     .shadow(color: Color.black.opacity(0.18), radius: 10, x: 0, y: 6)
             }
+            .buttonStyle(NoHighlightButtonStyle())
             .padding(.bottom, 18)
         }
+    }
+}
+
+private struct NoHighlightButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(1)
+            .scaleEffect(1)
     }
 }
