@@ -20,6 +20,7 @@ struct AddTransactionView: View {
     @State private var showingDatePicker = false
     @State private var dateDismissTask: Task<Void, Never>?
     @State private var isEditingNote = false
+    @State private var showingDeleteConfirm = false
     @FocusState private var noteFocused: Bool
     @State private var amountContainerWidth: CGFloat = 0
     @State private var digitWidth: CGFloat = 0
@@ -53,6 +54,18 @@ struct AddTransactionView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("取消") { dismiss() }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    if transaction != nil {
+                        Button {
+                            showingDeleteConfirm = true
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.body)
+                                .imageScale(.medium)
+                        }
+                        .foregroundStyle(.red)
+                    }
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -90,6 +103,12 @@ struct AddTransactionView: View {
                 if !focused && isEditingNote {
                     isEditingNote = false
                 }
+            }
+            .alert("删除这笔记录？", isPresented: $showingDeleteConfirm) {
+                Button("删除", role: .destructive) { deleteTransaction() }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("此操作无法撤销。")
             }
             .sheet(isPresented: $showingCategoryManager) {
                 NavigationStack {
@@ -377,6 +396,13 @@ struct AddTransactionView: View {
             context.insert(txn)
         }
 
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        dismiss()
+    }
+
+    private func deleteTransaction() {
+        guard let txn = transaction else { return }
+        context.delete(txn)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         dismiss()
     }

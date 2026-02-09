@@ -49,12 +49,12 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerBar
-            searchBar
             filterBar
             contentView
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
         .onChange(of: dateScope) { _, _ in
             currentPeriodDate = .now
         }
@@ -74,7 +74,6 @@ struct HomeView: View {
         .contentShape(Rectangle())
         .offset(x: dragOffset)
         .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1), value: dragOffset)
-        .simultaneousGesture(periodSwipeGesture)
     }
 
     private var emptyStateView: some View {
@@ -83,22 +82,6 @@ struct HomeView: View {
             message: transactions.isEmpty ? "添加第一笔支出或收入" : "调整筛选或搜索条件"
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var searchBar: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-            TextField("搜索", text: $searchText)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .padding(.horizontal)
-        .padding(.bottom, 8)
     }
 
     private var headerBar: some View {
@@ -136,9 +119,6 @@ struct HomeView: View {
                                 editingTransaction = txn
                             }
                     }
-                    .onDelete { indexSet in
-                        delete(in: section, at: indexSet)
-                    }
                 } header: {
                     HStack {
                         Text(formattedSectionDate(section.date))
@@ -147,6 +127,8 @@ struct HomeView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
+                    .contentShape(Rectangle())
+                    .highPriorityGesture(periodSwipeGesture)
                 }
             }
         }
@@ -217,12 +199,6 @@ struct HomeView: View {
         }
 
         return result
-    }
-
-    private func delete(in section: TransactionDaySection, at indexSet: IndexSet) {
-        let items = indexSet.map { section.transactions[$0] }
-        items.forEach { context.delete($0) }
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
     private func shiftPeriod(forward: Bool) {
