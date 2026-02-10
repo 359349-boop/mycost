@@ -8,12 +8,20 @@ struct MonthlyBucket: Identifiable {
     let expense: Double
 }
 
+struct YearlyBucket: Identifiable {
+    let id = UUID()
+    let yearStart: Date
+    let income: Double
+    let expense: Double
+}
+
 struct CategoryBucket: Identifiable {
     let id = UUID()
     let name: String
     let iconName: String
     let colorHex: String
     let total: Double
+    let count: Int
 }
 
 struct MonthlySummary {
@@ -24,63 +32,81 @@ struct MonthlySummary {
 
 @Observable
 final class StatsViewModel {
-    func monthlyBuckets(from transactions: [Transaction]) -> [MonthlyBucket] {
-        let grouped = Dictionary(grouping: transactions) { txn in
-            let components = Calendar.current.dateComponents([.year, .month], from: txn.date)
-            return Calendar.current.date(from: components) ?? txn.date
+    func recentMonths(from date: Date, count: Int) -> [Date] {
+        let calendar = Calendar.current
+        let comps = calendar.dateComponents([.year, .month], from: date)
+        let start = calendar.date(from: comps) ?? date
+        return (0..<count).compactMap { offset in
+            calendar.date(byAdding: .month, value: offset - (count - 1), to: start)
         }
+    }
 
-        let buckets = grouped.map { key, items in
-            let income = items.filter { $0.type == "Income" }
-                .reduce(0.0) { $0 + (NSDecimalNumber(decimal: $1.amount).doubleValue) }
-            let expense = items.filter { $0.type == "Expense" }
-                .reduce(0.0) { $0 + (NSDecimalNumber(decimal: $1.amount).doubleValue) }
-            return MonthlyBucket(monthStart: key, income: income, expense: expense)
+    func recentYears(from date: Date, count: Int) -> [Date] {
+        let calendar = Calendar.current
+        let comps = calendar.dateComponents([.year], from: date)
+        let start = calendar.date(from: comps) ?? date
+        return (0..<count).compactMap { offset in
+            calendar.date(byAdding: .year, value: offset - (count - 1), to: start)
         }
+    }
 
-        return buckets.sorted { $0.monthStart < $1.monthStart }
+    func monthlyBuckets(for months: [Date], transactions allTransactions: [Transaction]) -> [MonthlyBucket] {
+        months.map { month in
+            let items = transactionsInPeriod(containing: month, granularity: .month, from: allTransactions)
+            let income = items.filter { $0.type == "Income" }.reduce(0.0) { $0 + amount($1) }
+            let expense = items.filter { $0.type == "Expense" }.reduce(0.0) { $0 + amount($1) }
+            return MonthlyBucket(monthStart: month, income: income, expense: expense)
+        }
+    }
+
+    func yearlyBuckets(for years: [Date], transactions allTransactions: [Transaction]) -> [YearlyBucket] {
+        years.map { year in
+            let items = transactionsInPeriod(containing: year, granularity: .year, from: allTransactions)
+            let income = items.filter { $0.type == "Income" }.reduce(0.0) { $0 + amount($1) }
+            let expense = items.filter { $0.type == "Expense" }.reduce(0.0) { $0 + amount($1) }
+            return YearlyBucket(yearStart: year, income: income, expense: expense)
+        }
     }
 
     func monthlySummary(for date: Date, transactions allTransactions: [Transaction]) -> MonthlySummary {
-        let monthTransactions = transactions(inMonthContaining: date, from: allTransactions)
-        let expense = monthTransactions
-            .filter { $0.type == "Expense" }
-            .reduce(0.0) { $0 + NSDecimalNumber(decimal: $1.amount).doubleValue }
-        let income = monthTransactions
-            .filter { $0.type == "Income" }
-            .reduce(0.0) { $0 + NSDecimalNumber(decimal: $1.amount).doubleValue }
+        let monthTransactions = transactionsInPeriod(containing: date, granularity: .month, from: allTransactions)
+        let expense = monthTransactions.filter { $0.type == "Expense" }.reduce(0.0) { $0 + amount($1) }
+        let income = monthTransactions.filter { $0.type == "Income" }.reduce(0.0) { $0 + amount($1) }
         return MonthlySummary(income: income, expense: expense, balance: income - expense)
     }
 
-    func categoryBuckets(for date: Date, from transactions: [Transaction]) -> [CategoryBucket] {
-        let monthTransactions = self.transactions(inMonthContaining: date, from: transactions)
-        let expenses = monthTransactions.filter { $0.type == "Expense" }
-        let grouped = Dictionary(grouping: expenses) {
-            $0.category?.name ?? "未分类"
+    func categoryBuckets(
+        for date: Date,
+        granularity: Calendar.Component,
+        from transactions: [Transaction],
+        type: String
+    ) -> [CategoryBucket] {
+        let periodTransactions = transactionsInPeriod(containing: date, granularity: granularity, from: transactions)
+        let scoped = periodTransactions.filter { $0.type == type }
+        let grouped = Dictionary(grouping: scoped) { txn in
+            txn.category?.name ?? "未分类"
         }
 
         let buckets = grouped.map { key, items in
-            let total = items.reduce(0.0) {
-                $0 + NSDecimalNumber(decimal: $1.amount).doubleValue
+            let total = items.reduce(0.0) { result, txn in
+                let value = amount(txn)
+                let signed = type == "Expense" ? -value : value
+                return result + signed
             }
             let icon = items.first?.category?.iconName ?? "tag"
             let colorHex = items.first?.category?.colorHex ?? "#0A84FF"
-            return CategoryBucket(name: key, iconName: icon, colorHex: colorHex, total: total)
+            return CategoryBucket(name: key, iconName: icon, colorHex: colorHex, total: total, count: items.count)
         }
 
-        return buckets.sorted { $0.total > $1.total }
+        return buckets.sorted { abs($0.total) > abs($1.total) }
     }
 
-    func topExpenseCategories(for date: Date, from transactions: [Transaction], limit: Int) -> [CategoryBucket] {
-        Array(categoryBuckets(for: date, from: transactions).prefix(limit))
-    }
-
-    func transactions(inMonthContaining date: Date, from transactions: [Transaction]) -> [Transaction] {
+    func transactionsInPeriod(containing date: Date, granularity: Calendar.Component, from transactions: [Transaction]) -> [Transaction] {
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month], from: date)
-        return transactions.filter {
-            let item = calendar.dateComponents([.year, .month], from: $0.date)
-            return item.year == components.year && item.month == components.month
-        }
+        return transactions.filter { calendar.isDate($0.date, equalTo: date, toGranularity: granularity) }
+    }
+
+    private func amount(_ transaction: Transaction) -> Double {
+        NSDecimalNumber(decimal: transaction.amount).doubleValue
     }
 }
