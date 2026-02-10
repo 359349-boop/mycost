@@ -192,36 +192,40 @@ struct HomeView: View {
     }
 
     private var typeFilterCard: some View {
-        VStack(spacing: 6) {
-            Picker("类型", selection: $typeFilter) {
-                ForEach(TransactionTypeFilter.allCases) { item in
-                    Text(item.label).tag(item)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            typeAmountRow
-                .allowsHitTesting(false)
+        HStack(spacing: 6) {
+            typeSegmentButton(.all)
+            typeSegmentButton(.expense)
+            typeSegmentButton(.income)
         }
-        .padding(6)
+        .padding(4)
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
-    private var typeAmountRow: some View {
-        HStack(spacing: 8) {
-            amountCell(amountText(for: .all))
-            amountCell(amountText(for: .expense))
-            amountCell(amountText(for: .income))
+    private func typeSegmentButton(_ type: TransactionTypeFilter) -> some View {
+        let isSelected = typeFilter == type
+        let value = amountValue(for: type)
+        let amount = amountText(for: value)
+        let amountColor = amountColor(for: value)
+        return Button {
+            typeFilter = type
+        } label: {
+            VStack(spacing: 2) {
+                Text(type.label)
+                    .font(.subheadline)
+                    .fontWeight(isSelected ? .semibold : .regular)
+                    .foregroundStyle(.primary)
+                Text(amount)
+                    .font(.caption2)
+                    .foregroundStyle(amountColor)
+                    .monospacedDigit()
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(isSelected ? Color(.systemBackground) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
-    }
-
-    private func amountCell(_ text: String) -> some View {
-        Text(text)
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .monospacedDigit()
-            .frame(maxWidth: .infinity, alignment: .center)
+        .buttonStyle(.plain)
     }
 
     private var filteredTransactions: [Transaction] {
@@ -377,35 +381,41 @@ struct HomeView: View {
         return formatter.string(from: date)
     }
 
-    private func amountText(for type: TransactionTypeFilter) -> String {
+    private func amountValue(for type: TransactionTypeFilter) -> Decimal {
         let base = filteredTransactions(for: currentPeriodDate, type: nil)
-        let value: Decimal
-
         switch type {
         case .all:
-            value = base.reduce(Decimal.zero) { result, txn in
+            return base.reduce(Decimal.zero) { result, txn in
                 let signed = txn.type == "Expense" ? -txn.amount : txn.amount
                 return result + signed
             }
         case .expense:
-            value = base.filter { $0.type == "Expense" }.reduce(Decimal.zero) { $0 + $1.amount }
+            let total = base.filter { $0.type == "Expense" }.reduce(Decimal.zero) { $0 + $1.amount }
+            return -total
         case .income:
-            value = base.filter { $0.type == "Income" }.reduce(Decimal.zero) { $0 + $1.amount }
+            return base.filter { $0.type == "Income" }.reduce(Decimal.zero) { $0 + $1.amount }
         }
+    }
 
+    private func amountText(for value: Decimal) -> String {
         let number = NSDecimalNumber(decimal: value)
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "CNY"
         formatter.maximumFractionDigits = 2
         let formatted = formatter.string(from: NSNumber(value: abs(number.doubleValue))) ?? "¥0"
-        if type == .all {
-            if number == 0 {
-                return formatted
-            }
-            return number.doubleValue < 0 ? "-\(formatted)" : "+\(formatted)"
+        if number == 0 {
+            return formatted
         }
-        return formatted
+        return number.doubleValue < 0 ? "-\(formatted)" : "+\(formatted)"
+    }
+
+    private func amountColor(for value: Decimal) -> Color {
+        let number = NSDecimalNumber(decimal: value)
+        if number == 0 {
+            return .secondary
+        }
+        return number.doubleValue > 0 ? Color(.systemGreen) : Color(.systemRed)
     }
 
     private func netAmountText(_ value: Decimal) -> String {
