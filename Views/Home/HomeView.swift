@@ -39,6 +39,7 @@ struct HomeView: View {
     @State private var editingTransaction: Transaction?
     @GestureState private var dragOffset: CGFloat = 0
     @State private var previewPeriodDate: Date?
+    @State private var contentWidth: CGFloat = 0
 
     @State private var searchText = ""
     @State private var typeFilter: TransactionTypeFilter = .all
@@ -66,15 +67,26 @@ struct HomeView: View {
     }
 
     private var contentView: some View {
-        Group {
-            if filteredTransactions.isEmpty {
-                emptyStateView
-            } else {
-                listView
+        GeometryReader { proxy in
+            let width = proxy.size.width
+            let isForward = dragOffset < 0
+            ZStack {
+                periodContentView(for: filteredTransactions)
+                    .offset(x: dragOffset)
+
+                if let previewDate = previewPeriodDate {
+                    periodContentView(for: filteredTransactions(for: previewDate, type: typeFilter))
+                        .offset(x: dragOffset + (isForward ? width : -width))
+                        .allowsHitTesting(false)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onAppear { contentWidth = width }
+            .onChange(of: width) { _, newValue in
+                contentWidth = newValue
             }
         }
         .contentShape(Rectangle())
-        .offset(x: dragOffset)
         .animation(.interactiveSpring(response: 0.32, dampingFraction: 0.82, blendDuration: 0.12), value: dragOffset)
         .simultaneousGesture(periodSwipeGesture)
         .overlay {
@@ -128,8 +140,17 @@ struct HomeView: View {
         .background(Color(.systemBackground))
     }
 
-    private var listView: some View {
-        let sections = viewModel.sections(from: filteredTransactions)
+    @ViewBuilder
+    private func periodContentView(for transactions: [Transaction]) -> some View {
+        if transactions.isEmpty {
+            emptyStateView
+        } else {
+            listView(for: transactions)
+        }
+    }
+
+    private func listView(for transactions: [Transaction]) -> some View {
+        let sections = viewModel.sections(from: transactions)
         return List {
             ForEach(sections) { section in
                 Section {
@@ -157,12 +178,7 @@ struct HomeView: View {
 
     private var filterBar: some View {
         VStack(spacing: 8) {
-            Picker("类型", selection: $typeFilter) {
-                ForEach(TransactionTypeFilter.allCases) { item in
-                    Text(item.label).tag(item)
-                }
-            }
-            .pickerStyle(.segmented)
+            typeFilterCard
 
             Picker("时间", selection: $dateScope) {
                 ForEach(DateScope.allCases) { item in
@@ -175,20 +191,55 @@ struct HomeView: View {
         .background(Color(.systemBackground))
     }
 
-    private var filteredTransactions: [Transaction] {
-        filteredTransactions(for: currentPeriodDate)
+    private var typeFilterCard: some View {
+        VStack(spacing: 6) {
+            Picker("类型", selection: $typeFilter) {
+                ForEach(TransactionTypeFilter.allCases) { item in
+                    Text(item.label).tag(item)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            typeAmountRow
+                .allowsHitTesting(false)
+        }
+        .padding(6)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
-    private func filteredTransactions(for periodDate: Date) -> [Transaction] {
+    private var typeAmountRow: some View {
+        HStack(spacing: 8) {
+            amountCell(amountText(for: .all))
+            amountCell(amountText(for: .expense))
+            amountCell(amountText(for: .income))
+        }
+    }
+
+    private func amountCell(_ text: String) -> some View {
+        Text(text)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    private var filteredTransactions: [Transaction] {
+        filteredTransactions(for: currentPeriodDate, type: typeFilter)
+    }
+
+    private func filteredTransactions(for periodDate: Date, type: TransactionTypeFilter?) -> [Transaction] {
         var result = transactions
 
-        switch typeFilter {
-        case .all:
-            break
-        case .expense:
-            result = result.filter { $0.type == "Expense" }
-        case .income:
-            result = result.filter { $0.type == "Income" }
+        if let type {
+            switch type {
+            case .all:
+                break
+            case .expense:
+                result = result.filter { $0.type == "Expense" }
+            case .income:
+                result = result.filter { $0.type == "Income" }
+            }
         }
 
         switch dateScope {
@@ -231,7 +282,7 @@ struct HomeView: View {
             candidate = calendar.date(byAdding: .month, value: value, to: currentPeriodDate) ?? currentPeriodDate
         }
 
-        guard !filteredTransactions(for: candidate).isEmpty else { return }
+        guard !filteredTransactions(for: candidate, type: typeFilter).isEmpty else { return }
         withAnimation(.easeInOut(duration: 0.25)) {
             currentPeriodDate = candidate
         }
@@ -248,9 +299,15 @@ struct HomeView: View {
                 }
                 let forward = horizontal < 0
                 let candidate = candidatePeriodDate(forward: forward)
-                let canShift = candidate.map { !filteredTransactions(for: $0).isEmpty } ?? false
-                let factor: CGFloat = canShift ? 0.25 : 0.12
-                state = horizontal * factor
+                let canShift = candidate.map { !filteredTransactions(for: $0, type: typeFilter).isEmpty } ?? false
+                let clamped: CGFloat
+                if contentWidth > 0 {
+                    clamped = min(max(horizontal, -contentWidth), contentWidth)
+                } else {
+                    clamped = horizontal
+                }
+                let factor: CGFloat = canShift ? 1.0 : 0.2
+                state = clamped * factor
 
                 if abs(horizontal) > 24, let candidate, canShift {
                     previewPeriodDate = candidate
@@ -260,9 +317,10 @@ struct HomeView: View {
             }
             .onEnded { value in
                 defer { previewPeriodDate = nil }
-                let horizontal = value.translation.width
-                let vertical = value.translation.height
-                guard abs(horizontal) > abs(vertical), abs(horizontal) > 80 else { return }
+                let horizontal = value.predictedEndTranslation.width
+                let vertical = value.predictedEndTranslation.height
+                let threshold = max(CGFloat(60), contentWidth * CGFloat(0.25))
+                guard abs(horizontal) > abs(vertical), abs(horizontal) > threshold else { return }
                 if horizontal < 0 {
                     shiftPeriod(forward: true)
                 } else {
@@ -317,6 +375,37 @@ struct HomeView: View {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "MMM dd"
         return formatter.string(from: date)
+    }
+
+    private func amountText(for type: TransactionTypeFilter) -> String {
+        let base = filteredTransactions(for: currentPeriodDate, type: nil)
+        let value: Decimal
+
+        switch type {
+        case .all:
+            value = base.reduce(Decimal.zero) { result, txn in
+                let signed = txn.type == "Expense" ? -txn.amount : txn.amount
+                return result + signed
+            }
+        case .expense:
+            value = base.filter { $0.type == "Expense" }.reduce(Decimal.zero) { $0 + $1.amount }
+        case .income:
+            value = base.filter { $0.type == "Income" }.reduce(Decimal.zero) { $0 + $1.amount }
+        }
+
+        let number = NSDecimalNumber(decimal: value)
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "CNY"
+        formatter.maximumFractionDigits = 2
+        let formatted = formatter.string(from: NSNumber(value: abs(number.doubleValue))) ?? "¥0"
+        if type == .all {
+            if number == 0 {
+                return formatted
+            }
+            return number.doubleValue < 0 ? "-\(formatted)" : "+\(formatted)"
+        }
+        return formatted
     }
 
     private func netAmountText(_ value: Decimal) -> String {
