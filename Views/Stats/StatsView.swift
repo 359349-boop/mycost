@@ -23,20 +23,6 @@ private enum StatsPeriod: String, CaseIterable, Identifiable {
     }
 }
 
-private enum TrendType: String, Identifiable {
-    case income
-    case expense
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .income: return "收入"
-        case .expense: return "支出"
-        }
-    }
-}
-
 private enum CategoryScope: String, CaseIterable, Identifiable {
     case expense
     case income
@@ -58,13 +44,6 @@ private enum CategoryScope: String, CaseIterable, Identifiable {
     }
 }
 
-private struct TrendBar: Identifiable {
-    let id = UUID()
-    let date: Date
-    let type: TrendType
-    let value: Double
-}
-
 private struct DonutSlice: Identifiable {
     let id = UUID()
     let bucket: CategoryBucket
@@ -79,7 +58,6 @@ private struct DonutSlice: Identifiable {
 
 struct StatsView: View {
     @Query(sort: \Transaction.date) private var transactions: [Transaction]
-    @Environment(\.colorScheme) private var colorScheme
 
     @State private var selectedPeriod: StatsPeriod = .month
     @State private var selectedMonth: Date = StatsView.currentMonthStart
@@ -136,9 +114,6 @@ struct StatsView: View {
         let periodTransactions = viewModel.transactionsInPeriod(containing: selectedDate, granularity: period.calendarComponent, from: transactions)
         let hasData = !periodTransactions.isEmpty
 
-        let bars = trendBars(for: period)
-        let candidateDates = bars.map { $0.date }.uniqueSorted()
-
         let categoryBuckets = viewModel.categoryBuckets(
             for: selectedDate,
             granularity: period.calendarComponent,
@@ -153,21 +128,6 @@ struct StatsView: View {
                     Text(periodLabel)
                         .font(.headline)
                     Spacer()
-                }
-
-                trendChart(
-                    bars: bars,
-                    candidateDates: candidateDates,
-                    selectedDate: selectedDate,
-                    granularity: period.calendarComponent
-                ) { newDate in
-                    withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
-                        if period == .month {
-                            selectedMonth = newDate
-                        } else {
-                            selectedYear = newDate
-                        }
-                    }
                 }
 
                 if hasData {
@@ -199,112 +159,6 @@ struct StatsView: View {
         }
     }
 
-    private func trendBars(for period: StatsPeriod) -> [TrendBar] {
-        switch period {
-        case .month:
-            let months = viewModel.recentMonths(from: .now, count: 6)
-            let buckets = viewModel.monthlyBuckets(for: months, transactions: transactions)
-            return buckets.flatMap { bucket in
-                [
-                    TrendBar(date: bucket.monthStart, type: .income, value: bucket.income),
-                    TrendBar(date: bucket.monthStart, type: .expense, value: bucket.expense)
-                ]
-            }
-        case .year:
-            let years = viewModel.recentYears(from: .now, count: 6)
-            let buckets = viewModel.yearlyBuckets(for: years, transactions: transactions)
-            return buckets.flatMap { bucket in
-                [
-                    TrendBar(date: bucket.yearStart, type: .income, value: bucket.income),
-                    TrendBar(date: bucket.yearStart, type: .expense, value: bucket.expense)
-                ]
-            }
-        }
-    }
-
-    private func trendChart(
-        bars: [TrendBar],
-        candidateDates: [Date],
-        selectedDate: Date,
-        granularity: Calendar.Component,
-        onSelect: @escaping (Date) -> Void
-    ) -> some View {
-        let gridOpacity: Double = colorScheme == .dark ? 0.1 : 0.2
-        let incomeBase = Color(.systemGreen)
-        let expenseBase = Color(.systemRed)
-
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("收支趋势")
-                .font(.headline)
-
-            Chart {
-                ForEach(bars) { bar in
-                    let isSelected = Calendar.current.isDate(bar.date, equalTo: selectedDate, toGranularity: granularity)
-                    let base = bar.type == .income ? incomeBase : expenseBase
-                    let gradient = LinearGradient(
-                        stops: [
-                            .init(color: base.opacity(0.85), location: 0),
-                            .init(color: base.opacity(0.45), location: 0.1),
-                            .init(color: base.opacity(0.2), location: 1)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-
-                    BarMark(
-                        x: .value("周期", bar.date, unit: granularity),
-                        y: .value("金额", bar.value)
-                    )
-                    .position(by: .value("类型", bar.type.label))
-                    .foregroundStyle(gradient)
-                    .cornerRadius(4)
-                    .opacity(isSelected ? 1 : 0.7)
-                }
-            }
-            .frame(height: 220)
-            .chartLegend(.hidden)
-            .chartXAxis {
-                AxisMarks(values: .automatic) { value in
-                    AxisGridLine().foregroundStyle(Color.primary.opacity(gridOpacity))
-                    AxisTick().foregroundStyle(Color.primary.opacity(gridOpacity))
-                    AxisValueLabel(format: axisLabelFormat(for: granularity))
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .chartYAxis {
-                AxisMarks { value in
-                    AxisGridLine().foregroundStyle(Color.primary.opacity(gridOpacity))
-                    AxisTick().foregroundStyle(Color.primary.opacity(gridOpacity))
-                    AxisValueLabel()
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .chartOverlay { proxy in
-                GeometryReader { geo in
-                    Rectangle()
-                        .fill(Color.clear)
-                        .contentShape(Rectangle())
-                        .gesture(
-                            SpatialTapGesture()
-                                .onEnded { value in
-                                    guard let plotFrame = proxy.plotFrame else { return }
-                                    let origin = geo[plotFrame].origin
-                                    let locationX = value.location.x - origin.x
-                                    if let date: Date = proxy.value(atX: locationX) {
-                                        if let nearest = nearestDate(to: date, in: candidateDates, granularity: granularity) {
-                                            onSelect(nearest)
-                                        }
-                                    }
-                                }
-                        )
-                }
-            }
-            .animation(.spring(response: 0.36, dampingFraction: 0.86), value: selectedDate)
-        }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
-    }
 
     private func donutSection(slices: [DonutSlice]) -> some View {
         let ringSize: CGFloat = 120
@@ -430,29 +284,6 @@ struct StatsView: View {
         return formatter.string(from: date)
     }
 
-    private func axisLabelFormat(for granularity: Calendar.Component) -> Date.FormatStyle {
-        switch granularity {
-        case .year:
-            return Date.FormatStyle().year(.defaultDigits)
-        default:
-            return Date.FormatStyle().month(.defaultDigits).year(.defaultDigits)
-        }
-    }
-
-    private func nearestDate(to date: Date, in candidates: [Date], granularity: Calendar.Component) -> Date? {
-        guard !candidates.isEmpty else { return nil }
-        let calendar = Calendar.current
-        let normalized: Date
-        switch granularity {
-        case .year:
-            let comps = calendar.dateComponents([.year], from: date)
-            normalized = calendar.date(from: comps) ?? date
-        default:
-            let comps = calendar.dateComponents([.year, .month], from: date)
-            normalized = calendar.date(from: comps) ?? date
-        }
-        return candidates.min(by: { abs($0.timeIntervalSince(normalized)) < abs($1.timeIntervalSince(normalized)) })
-    }
 
     private func makeDonutSlices(from buckets: [CategoryBucket]) -> [DonutSlice] {
         let total = buckets.reduce(0.0) { $0 + abs($1.total) }
@@ -520,11 +351,5 @@ struct StatsView: View {
             return formatted
         }
         return value < 0 ? "-\(formatted)" : "+\(formatted)"
-    }
-}
-
-private extension Array where Element == Date {
-    func uniqueSorted() -> [Date] {
-        Array(Set(self)).sorted()
     }
 }

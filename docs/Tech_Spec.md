@@ -45,14 +45,11 @@
 
 ### 4.3 统计页重设计（Stats）
 - 顶部切换：使用 `TabView` 左右滑动切换「月/年」周期，并显示当前周期时间。
-- 趋势范围：月视图固定展示当前月 + 过去 5 个月（共 6 个月）；年视图固定展示当前年 + 过去 5 年（共 6 年）。
-- 图表交互：点击柱状图某月份，更新 `selectedMonth` 并联动环形图与分类列表。
-- 柱图视觉：`BarMark` 半透明填充 + 顶部高亮（使用渐变模拟），并设置 `cornerRadius(4)`。
 - Donut：`SectorMark` + `innerRadius`，外侧使用引线 + `annotation` 放置分类图标与百分比。
 - 构成分布：支持「支出/收入」切换，切换后 Donut 与分类列表联动刷新。
-- 颜色规范：柱图使用系统语义色（`systemGreen` / `systemRed`），Donut 分段使用 `Category.colorHex`。
-- 深色模式：图表网格线透明度降至 `0.1`，文字使用 `.primary` / `.secondary`。
-- 动画：切换周期与选中月份时，柱状图高度与环形图弧度使用 Spring 动画过渡。
+- 颜色规范：Donut 分段使用 `Category.colorHex`。
+- 深色模式：文字使用 `.primary` / `.secondary`。
+- 动画：切换周期时，环形图弧度使用 Spring 动画过渡。
 
 ## 5. 项目目录结构
 ```text
