@@ -111,7 +111,6 @@ struct StatsView: View {
 
     private func periodPage(period: StatsPeriod) -> some View {
         let selectedDate = period == .month ? selectedMonth : selectedYear
-        let periodLabel = formattedPeriodLabel(for: selectedDate, period: period)
         let periodTransactions = viewModel.transactionsInPeriod(containing: selectedDate, granularity: period.calendarComponent, from: transactions)
         let hasData = !periodTransactions.isEmpty
 
@@ -488,38 +487,35 @@ private struct TrendChartCard: View {
             .chartXScale(domain: earliestMonth...Self.monthEnd(for: latestMonth))
             .chartXVisibleDomain(length: visibleDomainLength)
             .chartScrollPosition(x: $scrollPosition)
+            .onAppear {
+                syncVisibleRange(with: scrollPosition)
+            }
+            .onChange(of: scrollPosition) { _, newValue in
+                syncVisibleRange(with: newValue)
+            }
             .chartOverlay { proxy in
-                GeometryReader { geo in
-                    if proxy.plotFrame != nil {
-                        let maxY = proxy.position(forY: displayMax)
-                        let midY = proxy.position(forY: displayMid)
-
-                        ZStack(alignment: .topLeading) {
-                            if displayMax > 0 {
-                                if let maxY {
-                                    Text(formatAxisValue(displayMax))
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                        .position(x: 8, y: maxY)
-                                }
-                                if let midY {
-                                    Text(formatAxisValue(displayMid))
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                        .position(x: 8, y: midY)
-                                }
+                if proxy.plotFrame != nil {
+                    let maxY = proxy.position(forY: displayMax)
+                    let midY = proxy.position(forY: displayMid)
+                    ZStack(alignment: .topLeading) {
+                        if displayMax > 0 {
+                            if let maxY {
+                                Text(formatAxisValue(displayMax))
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .position(x: 8, y: maxY)
+                            }
+                            if let midY {
+                                Text(formatAxisValue(displayMid))
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .position(x: 8, y: midY)
                             }
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                        .onAppear {
-                            updateVisibleRange(start: scrollPosition, end: nil)
-                        }
-                        .onChange(of: scrollPosition) { _, _ in
-                            updateVisibleRange(start: scrollPosition, end: nil)
-                        }
-                    } else {
-                        Color.clear
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                } else {
+                    Color.clear
                 }
             }
             .frame(height: 90)
@@ -566,19 +562,26 @@ private struct TrendChartCard: View {
         return start...latestMonth
     }
 
-    private func updateVisibleRange(start: Date?, end _: Date?) {
-        guard let start else { return }
-        var lower = Self.monthStart(for: start)
-        if lower < earliestMonth {
-            lower = earliestMonth
-        }
-        let desiredUpper = Self.addMonths(lower, by: max(visibleMonthCount - 1, 0))
-        let latestStart = Self.monthStart(for: latestMonth)
-        let upper = min(desiredUpper, latestStart)
+    private func syncVisibleRange(with position: Date) {
+        let domainEnd = Self.monthEnd(for: latestMonth)
+        let maxStart = max(earliestMonth, domainEnd.addingTimeInterval(-visibleDomainLength))
+        let clampedStart = min(max(position, earliestMonth), maxStart)
+        let clampedEnd = min(domainEnd, clampedStart.addingTimeInterval(visibleDomainLength))
+        let rightMonth = min(Self.monthStart(for: clampedEnd), Self.monthStart(for: latestMonth))
+        let leftCandidate = Self.addMonths(rightMonth, by: -(max(visibleMonthCount - 1, 0)))
+        let leftMonth = max(earliestMonth, leftCandidate)
+        updateVisibleRange(leftMonth...rightMonth)
+    }
+
+    private func updateVisibleRange(_ bounds: ClosedRange<Date>) {
+        var lower = Self.monthStart(for: bounds.lowerBound)
+        var upper = Self.monthStart(for: bounds.upperBound)
+        lower = max(lower, earliestMonth)
+        upper = min(upper, Self.monthStart(for: latestMonth))
         if lower > upper {
             lower = upper
         }
-        if lower != visibleRange.lowerBound || upper != visibleRange.upperBound {
+        if visibleRange.lowerBound != lower || visibleRange.upperBound != upper {
             DispatchQueue.main.async {
                 visibleRange = lower...upper
             }
@@ -596,4 +599,5 @@ private struct TrendChartCard: View {
         let calendar = Calendar.current
         return calendar.date(byAdding: .month, value: value, to: date) ?? date
     }
+
 }
