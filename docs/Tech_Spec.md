@@ -45,6 +45,13 @@
 
 ### 4.3 统计页重设计（Stats）
 - 顶部切换：使用 `TabView` 左右滑动切换「月/年」周期，并显示当前周期时间。
+- 收支分析（Trend）：
+  - 图表：使用 `BarMark` 绘制收入/支出双柱，收入 `Color(.systemGreen)`、支出 `Color(.systemRed)`。
+  - 滑动：启用 `.chartScrollableAxes(.horizontal)`，可视范围固定为 6 个月；默认展示当前月向左的 6 个月。
+  - 数据范围：仅包含历史月份（`earliestMonth...currentMonthEnd`），不展示未来月份。
+  - 轴线：0 轴实线；中值/最大值使用虚线并采用 `Color(.systemGray3)`。
+  - 动态尺度：y 轴最大值/中值基于当前可视 6 个月计算，k 值显示在左侧。
+  - x 轴标签：显示 `MM`，位于收入/支出双柱之间。
 - Donut：`SectorMark` + `innerRadius`，外侧使用引线 + `annotation` 放置分类图标与百分比。
 - 构成分布：支持「支出/收入」切换，切换后 Donut 与分类列表联动刷新。
 - 颜色规范：Donut 分段使用 `Category.colorHex`。

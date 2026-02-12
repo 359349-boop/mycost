@@ -32,13 +32,40 @@ struct MonthlySummary {
 
 @Observable
 final class StatsViewModel {
-    func recentMonths(from date: Date, count: Int) -> [Date] {
+    func monthStart(for date: Date) -> Date {
         let calendar = Calendar.current
         let comps = calendar.dateComponents([.year, .month], from: date)
-        let start = calendar.date(from: comps) ?? date
+        return calendar.date(from: comps) ?? date
+    }
+
+    func recentMonths(from date: Date, count: Int) -> [Date] {
+        let calendar = Calendar.current
+        let start = monthStart(for: date)
         return (0..<count).compactMap { offset in
             calendar.date(byAdding: .month, value: offset - (count - 1), to: start)
         }
+    }
+
+    func monthSeries(from start: Date, to end: Date) -> [Date] {
+        let calendar = Calendar.current
+        let startMonth = monthStart(for: start)
+        let endMonth = monthStart(for: end)
+        guard startMonth <= endMonth else { return [endMonth] }
+        var months: [Date] = []
+        var cursor = startMonth
+        while cursor <= endMonth {
+            months.append(cursor)
+            guard let next = calendar.date(byAdding: .month, value: 1, to: cursor) else { break }
+            cursor = next
+        }
+        return months
+    }
+
+    func earliestMonthStart(from transactions: [Transaction], fallback: Date) -> Date {
+        guard let minDate = transactions.map(\.date).min() else { return monthStart(for: fallback) }
+        let earliest = monthStart(for: minDate)
+        let fallbackMonth = monthStart(for: fallback)
+        return earliest > fallbackMonth ? fallbackMonth : earliest
     }
 
     func recentYears(from date: Date, count: Int) -> [Date] {
@@ -58,6 +85,7 @@ final class StatsViewModel {
             return MonthlyBucket(monthStart: month, income: income, expense: expense)
         }
     }
+
 
     func yearlyBuckets(for years: [Date], transactions allTransactions: [Transaction]) -> [YearlyBucket] {
         years.map { year in

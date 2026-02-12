@@ -65,6 +65,7 @@ struct StatsView: View {
     @State private var categoryScope: CategoryScope = .expense
 
     private let viewModel = StatsViewModel()
+    private let trendVisibleMonthCount = 6
 
     private static var currentMonthStart: Date {
         let calendar = Calendar.current
@@ -130,6 +131,10 @@ struct StatsView: View {
                     Spacer()
                 }
 
+                if period == .month {
+                    trendChartSection
+                }
+
                 if hasData {
                     Picker("收支类型", selection: $categoryScope) {
                         ForEach(CategoryScope.allCases) { scope in
@@ -157,6 +162,20 @@ struct StatsView: View {
             }
             .padding()
         }
+    }
+
+    private var trendChartSection: some View {
+        let latestMonth = viewModel.monthStart(for: selectedMonth)
+        let earliestMonth = viewModel.earliestMonthStart(from: transactions, fallback: latestMonth)
+        let months = viewModel.monthSeries(from: earliestMonth, to: latestMonth)
+        let buckets = viewModel.monthlyBuckets(for: months, transactions: transactions)
+        return TrendChartCard(
+            title: "收支分析",
+            buckets: buckets,
+            earliestMonth: earliestMonth,
+            latestMonth: latestMonth,
+            visibleMonthCount: trendVisibleMonthCount
+        )
     }
 
 
@@ -351,5 +370,267 @@ struct StatsView: View {
             return formatted
         }
         return value < 0 ? "-\(formatted)" : "+\(formatted)"
+    }
+}
+
+private struct TrendChartCard: View {
+    let title: String
+    let buckets: [MonthlyBucket]
+    let earliestMonth: Date
+    let latestMonth: Date
+    let visibleMonthCount: Int
+
+    @State private var scrollPosition: Date
+    @State private var visibleRange: ClosedRange<Date>
+
+    private let incomeColor = Color(.systemGreen)
+    private let expenseColor = Color(.systemRed)
+
+    init(
+        title: String,
+        buckets: [MonthlyBucket],
+        earliestMonth: Date,
+        latestMonth: Date,
+        visibleMonthCount: Int
+    ) {
+        self.title = title
+        self.buckets = buckets
+        self.earliestMonth = earliestMonth
+        self.latestMonth = latestMonth
+        self.visibleMonthCount = visibleMonthCount
+
+        let initialRange = Self.initialVisibleRange(
+            earliestMonth: earliestMonth,
+            latestMonth: latestMonth,
+            visibleMonthCount: visibleMonthCount
+        )
+        _scrollPosition = State(initialValue: initialRange.lowerBound)
+        _visibleRange = State(initialValue: initialRange)
+    }
+
+    private var visibleBuckets: [MonthlyBucket] {
+        let start = Self.monthStart(for: visibleRange.lowerBound)
+        let end = Self.monthStart(for: visibleRange.upperBound)
+        return buckets.filter { $0.monthStart >= start && $0.monthStart <= end }
+    }
+
+    private var displayMax: Double {
+        visibleBuckets.map { max($0.income, $0.expense) }.max() ?? 0
+    }
+
+    private var displayMid: Double {
+        displayMax / 2
+    }
+
+    private var chartTop: Double {
+        let base = displayMax == 0 ? 1 : displayMax
+        return base * 1.1
+    }
+
+    private var visibleRangeText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy年MM月"
+        let start = Self.monthStart(for: visibleRange.lowerBound)
+        let end = Self.monthStart(for: visibleRange.upperBound)
+        return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+    }
+
+    private var visibleDomainLength: TimeInterval {
+        let calendar = Calendar.current
+        let offset = max(visibleMonthCount - 1, 0)
+        let desiredStart = calendar.date(byAdding: .month, value: -offset, to: Self.monthStart(for: latestMonth)) ?? latestMonth
+        let start = max(earliestMonth, desiredStart)
+        let end = Self.monthEnd(for: latestMonth)
+        let length = end.timeIntervalSince(start)
+        return max(length, 24 * 60 * 60)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(.headline)
+                Spacer()
+                Text(visibleRangeText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 12) {
+                legendItem(title: "收入", color: incomeColor)
+                legendItem(title: "支出", color: expenseColor)
+            }
+
+            Chart {
+                ForEach(buckets) { bucket in
+                    BarMark(
+                        x: .value("月份", bucket.monthStart, unit: .month),
+                        y: .value("收入", bucket.income)
+                    )
+                    .foregroundStyle(incomeColor)
+                    .position(by: .value("类型", "收入"))
+                    .cornerRadius(4)
+                    .offset(x: -16)
+
+                    BarMark(
+                        x: .value("月份", bucket.monthStart, unit: .month),
+                        y: .value("支出", bucket.expense)
+                    )
+                    .foregroundStyle(expenseColor)
+                    .position(by: .value("类型", "支出"))
+                    .cornerRadius(4)
+                    .offset(x: -16)
+                }
+
+                RuleMark(y: .value("零轴", 0))
+                    .foregroundStyle(Color(.separator))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+
+                if displayMax > 0 {
+                    RuleMark(y: .value("中值", displayMid))
+                        .foregroundStyle(Color(.systemGray3))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+
+                    RuleMark(y: .value("最大值", displayMax))
+                        .foregroundStyle(Color(.systemGray3))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                }
+            }
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks(values: buckets.map(\.monthStart)) { value in
+                    AxisValueLabel {
+                        if let date = value.as(Date.self) {
+                            Text(monthLabel(date))
+                        }
+                    }
+                }
+            }
+            .chartLegend(.hidden)
+            .chartYScale(domain: 0...chartTop)
+            .chartScrollableAxes(.horizontal)
+            .chartXScale(domain: earliestMonth...Self.monthEnd(for: latestMonth))
+            .chartXVisibleDomain(length: visibleDomainLength)
+            .chartScrollPosition(x: $scrollPosition)
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    if proxy.plotFrame != nil {
+                        let maxY = proxy.position(forY: displayMax)
+                        let midY = proxy.position(forY: displayMid)
+
+                        ZStack(alignment: .topLeading) {
+                            if displayMax > 0 {
+                                if let maxY {
+                                    Text(formatAxisValue(displayMax))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .position(x: 8, y: maxY)
+                                }
+                                if let midY {
+                                    Text(formatAxisValue(displayMid))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .position(x: 8, y: midY)
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .onAppear {
+                            updateVisibleRange(start: scrollPosition, end: nil)
+                        }
+                        .onChange(of: scrollPosition) { _, _ in
+                            updateVisibleRange(start: scrollPosition, end: nil)
+                        }
+                    } else {
+                        Color.clear
+                    }
+                }
+            }
+            .frame(height: 180)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(16)
+    }
+
+    private func legendItem(title: String, color: Color) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "circle.fill")
+                .font(.caption2)
+                .foregroundStyle(color)
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func monthLabel(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM"
+        return formatter.string(from: date)
+    }
+
+    private func formatAxisValue(_ value: Double) -> String {
+        guard value >= 1000 else {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 0
+            return formatter.string(from: NSNumber(value: value)) ?? "0"
+        }
+
+        let kValue = value / 1000
+        let rounded = (kValue * 10).rounded() / 10
+        let formatted = String(format: "%.1f", rounded)
+        let trimmed = formatted.hasSuffix(".0") ? String(formatted.dropLast(2)) : formatted
+        return "\(trimmed)k"
+    }
+
+    private static func monthStart(for date: Date) -> Date {
+        let calendar = Calendar.current
+        let comps = calendar.dateComponents([.year, .month], from: date)
+        return calendar.date(from: comps) ?? date
+    }
+
+    private static func initialVisibleRange(
+        earliestMonth: Date,
+        latestMonth: Date,
+        visibleMonthCount: Int
+    ) -> ClosedRange<Date> {
+        let calendar = Calendar.current
+        let offset = max(visibleMonthCount - 1, 0)
+        let desiredStart = calendar.date(byAdding: .month, value: -offset, to: Self.monthStart(for: latestMonth)) ?? latestMonth
+        let start = max(earliestMonth, desiredStart)
+        return start...latestMonth
+    }
+
+    private func updateVisibleRange(start: Date?, end _: Date?) {
+        guard let start else { return }
+        var lower = Self.monthStart(for: start)
+        if lower < earliestMonth {
+            lower = earliestMonth
+        }
+        let desiredUpper = Self.addMonths(lower, by: max(visibleMonthCount - 1, 0))
+        let latestStart = Self.monthStart(for: latestMonth)
+        let upper = min(desiredUpper, latestStart)
+        if lower > upper {
+            lower = upper
+        }
+        if lower != visibleRange.lowerBound || upper != visibleRange.upperBound {
+            DispatchQueue.main.async {
+                visibleRange = lower...upper
+            }
+        }
+    }
+
+    private static func monthEnd(for date: Date) -> Date {
+        let calendar = Calendar.current
+        let start = Self.monthStart(for: date)
+        guard let next = calendar.date(byAdding: .month, value: 1, to: start) else { return date }
+        return next.addingTimeInterval(-1)
+    }
+
+    private static func addMonths(_ date: Date, by value: Int) -> Date {
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .month, value: value, to: date) ?? date
     }
 }
