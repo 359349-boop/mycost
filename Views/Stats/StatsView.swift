@@ -125,12 +125,6 @@ struct StatsView: View {
 
         return ScrollView {
             VStack(spacing: 16) {
-                HStack {
-                    Text(periodLabel)
-                        .font(.headline)
-                    Spacer()
-                }
-
                 if period == .month {
                     trendChartSection
                 }
@@ -170,7 +164,6 @@ struct StatsView: View {
         let months = viewModel.monthSeries(from: earliestMonth, to: latestMonth)
         let buckets = viewModel.monthlyBuckets(for: months, transactions: transactions)
         return TrendChartCard(
-            title: "收支分析",
             buckets: buckets,
             earliestMonth: earliestMonth,
             latestMonth: latestMonth,
@@ -374,7 +367,6 @@ struct StatsView: View {
 }
 
 private struct TrendChartCard: View {
-    let title: String
     let buckets: [MonthlyBucket]
     let earliestMonth: Date
     let latestMonth: Date
@@ -387,13 +379,11 @@ private struct TrendChartCard: View {
     private let expenseColor = Color(.systemRed)
 
     init(
-        title: String,
         buckets: [MonthlyBucket],
         earliestMonth: Date,
         latestMonth: Date,
         visibleMonthCount: Int
     ) {
-        self.title = title
         self.buckets = buckets
         self.earliestMonth = earliestMonth
         self.latestMonth = latestMonth
@@ -447,20 +437,6 @@ private struct TrendChartCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(title)
-                    .font(.headline)
-                Spacer()
-                Text(visibleRangeText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            HStack(spacing: 12) {
-                legendItem(title: "收入", color: incomeColor)
-                legendItem(title: "支出", color: expenseColor)
-            }
-
             Chart {
                 ForEach(buckets) { bucket in
                     BarMark(
@@ -546,22 +522,9 @@ private struct TrendChartCard: View {
                     }
                 }
             }
-            .frame(height: 180)
+            .frame(height: 90)
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
-    }
-
-    private func legendItem(title: String, color: Color) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: "circle.fill")
-                .font(.caption2)
-                .foregroundStyle(color)
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
+        .padding(.vertical, 6)
     }
 
     private func monthLabel(_ date: Date) -> String {
