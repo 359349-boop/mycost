@@ -126,6 +126,8 @@ struct StatsView: View {
             VStack(spacing: 16) {
                 if period == .month {
                     trendChartSection
+                } else if period == .year {
+                    yearTrendChartSection
                 }
 
                 if hasData {
@@ -169,6 +171,30 @@ struct StatsView: View {
             visibleMonthCount: trendVisibleMonthCount,
             onSelectMonth: { tappedMonth in
                 selectedMonth = tappedMonth
+            }
+        )
+    }
+
+    private var yearTrendChartSection: some View {
+        let calendar = Calendar.current
+        let visibleYearCount = 6
+        let latestYear = viewModel.yearStart(for: .now)
+        let dataEarliestYear = viewModel.earliestYearStart(from: transactions, fallback: latestYear)
+        let defaultStartYear = calendar.date(
+            byAdding: .year,
+            value: -(max(visibleYearCount - 1, 0)),
+            to: latestYear
+        ) ?? latestYear
+        let earliestYear = min(dataEarliestYear, defaultStartYear)
+        let years = viewModel.yearSeries(from: earliestYear, to: latestYear)
+        let buckets = viewModel.yearlyBuckets(for: years, transactions: transactions)
+        return YearTrendChartCard(
+            buckets: buckets,
+            earliestYear: earliestYear,
+            latestYear: latestYear,
+            visibleYearCount: visibleYearCount,
+            onSelectYear: { tappedYear in
+                selectedYear = tappedYear
             }
         )
     }
@@ -258,9 +284,6 @@ struct StatsView: View {
 
     private func categoryList(buckets: [CategoryBucket]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("分类详情")
-                .font(.headline)
-
             VStack(spacing: 10) {
                 ForEach(buckets) { bucket in
                     HStack(spacing: 12) {
@@ -636,4 +659,269 @@ private struct TrendChartCard: View {
         return calendar.date(byAdding: .month, value: value, to: date) ?? date
     }
 
+}
+
+private struct YearTrendChartCard: View {
+    let buckets: [YearlyBucket]
+    let earliestYear: Date
+    let latestYear: Date
+    let visibleYearCount: Int
+    let onSelectYear: (Date) -> Void
+
+    @State private var scrollPosition: Date
+    @State private var visibleRange: ClosedRange<Date>
+    @State private var plotFrameInChart: CGRect = .zero
+
+    private let incomeColor = Color(.systemGreen)
+    private let expenseColor = Color(.systemRed)
+
+    init(
+        buckets: [YearlyBucket],
+        earliestYear: Date,
+        latestYear: Date,
+        visibleYearCount: Int,
+        onSelectYear: @escaping (Date) -> Void = { _ in }
+    ) {
+        self.buckets = buckets
+        self.earliestYear = earliestYear
+        self.latestYear = latestYear
+        self.visibleYearCount = visibleYearCount
+        self.onSelectYear = onSelectYear
+
+        let initialRange = Self.initialVisibleRange(
+            earliestYear: earliestYear,
+            latestYear: latestYear,
+            visibleYearCount: visibleYearCount
+        )
+        _scrollPosition = State(initialValue: initialRange.lowerBound)
+        _visibleRange = State(initialValue: initialRange)
+    }
+
+    private var visibleBuckets: [YearlyBucket] {
+        let start = Self.yearStart(for: visibleRange.lowerBound)
+        let end = Self.yearStart(for: visibleRange.upperBound)
+        return buckets.filter { $0.yearStart >= start && $0.yearStart <= end }
+    }
+
+    private var displayMax: Double {
+        visibleBuckets.map { max($0.income, $0.expense) }.max() ?? 0
+    }
+
+    private var displayMid: Double {
+        displayMax / 2
+    }
+
+    private var chartTop: Double {
+        let base = displayMax == 0 ? 1 : displayMax
+        return base * 1.1
+    }
+
+    private var visibleDomainLength: TimeInterval {
+        let calendar = Calendar.current
+        let offset = max(visibleYearCount - 1, 0)
+        let desiredStart = calendar.date(byAdding: .year, value: -offset, to: Self.yearStart(for: latestYear)) ?? latestYear
+        let start = max(earliestYear, desiredStart)
+        let end = Self.yearEnd(for: latestYear)
+        let length = end.timeIntervalSince(start)
+        return max(length, 24 * 60 * 60)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Chart {
+                ForEach(buckets) { bucket in
+                    BarMark(
+                        x: .value("年份", bucket.yearStart, unit: .year),
+                        y: .value("收入", bucket.income)
+                    )
+                    .foregroundStyle(incomeColor)
+                    .position(by: .value("类型", "收入"))
+                    .cornerRadius(4)
+                    .offset(x: -16)
+
+                    BarMark(
+                        x: .value("年份", bucket.yearStart, unit: .year),
+                        y: .value("支出", bucket.expense)
+                    )
+                    .foregroundStyle(expenseColor)
+                    .position(by: .value("类型", "支出"))
+                    .cornerRadius(4)
+                    .offset(x: -16)
+                }
+
+                RuleMark(y: .value("零轴", 0))
+                    .foregroundStyle(Color(.separator))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+
+                if displayMax > 0 {
+                    RuleMark(y: .value("中值", displayMid))
+                        .foregroundStyle(Color(.systemGray3))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+
+                    RuleMark(y: .value("最大值", displayMax))
+                        .foregroundStyle(Color(.systemGray3))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                }
+            }
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks(values: buckets.map(\.yearStart)) { value in
+                    AxisValueLabel {
+                        if let date = value.as(Date.self) {
+                            Text(yearLabel(date))
+                        }
+                    }
+                }
+            }
+            .chartLegend(.hidden)
+            .chartYScale(domain: 0...chartTop)
+            .chartScrollableAxes(.horizontal)
+            .chartXScale(domain: earliestYear...Self.yearEnd(for: latestYear))
+            .chartXVisibleDomain(length: visibleDomainLength)
+            .chartScrollPosition(x: $scrollPosition)
+            .onAppear {
+                syncVisibleRange(with: scrollPosition)
+            }
+            .onChange(of: scrollPosition) { _, newValue in
+                syncVisibleRange(with: newValue)
+            }
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    if let plotFrame = proxy.plotFrame {
+                        let frame = geo[plotFrame]
+                        let maxY = proxy.position(forY: displayMax)
+                        let midY = proxy.position(forY: displayMid)
+                        ZStack(alignment: .topLeading) {
+                            if displayMax > 0 {
+                                if let maxY {
+                                    Text(formatAxisValue(displayMax))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .position(x: 8, y: maxY)
+                                }
+                                if let midY {
+                                    Text(formatAxisValue(displayMid))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .position(x: 8, y: midY)
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .background(
+                            Color.clear
+                                .onAppear {
+                                    plotFrameInChart = frame
+                                }
+                                .onChange(of: frame) { _, newFrame in
+                                    plotFrameInChart = newFrame
+                                }
+                        )
+                    } else {
+                        Color.clear
+                    }
+                }
+                .allowsHitTesting(false)
+            }
+            .simultaneousGesture(
+                SpatialTapGesture()
+                    .onEnded { value in
+                        handleTap(at: value.location)
+                    }
+            )
+            .frame(height: 90)
+        }
+        .padding(.vertical, 6)
+    }
+
+    private func yearLabel(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy"
+        return formatter.string(from: date)
+    }
+
+    private func formatAxisValue(_ value: Double) -> String {
+        guard value >= 1000 else {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 0
+            return formatter.string(from: NSNumber(value: value)) ?? "0"
+        }
+
+        let kValue = value / 1000
+        let rounded = (kValue * 10).rounded() / 10
+        let formatted = String(format: "%.1f", rounded)
+        let trimmed = formatted.hasSuffix(".0") ? String(formatted.dropLast(2)) : formatted
+        return "\(trimmed)k"
+    }
+
+    private func handleTap(at location: CGPoint) {
+        guard plotFrameInChart != .zero, plotFrameInChart.contains(location) else { return }
+        let progress = min(max((location.x - plotFrameInChart.minX) / max(plotFrameInChart.width, 1), 0), 1)
+        let rangeStart = Self.yearStart(for: visibleRange.lowerBound)
+        let rangeEnd = Self.yearEnd(for: visibleRange.upperBound)
+        let duration = rangeEnd.timeIntervalSince(rangeStart)
+        let tappedDate = rangeStart.addingTimeInterval(duration * progress)
+        let sourceBuckets = visibleBuckets.isEmpty ? buckets : visibleBuckets
+        guard let nearest = sourceBuckets.min(by: {
+            abs($0.yearStart.timeIntervalSince(tappedDate)) < abs($1.yearStart.timeIntervalSince(tappedDate))
+        }) else { return }
+        onSelectYear(Self.yearStart(for: nearest.yearStart))
+    }
+
+    private static func yearStart(for date: Date) -> Date {
+        let calendar = Calendar.current
+        let comps = calendar.dateComponents([.year], from: date)
+        return calendar.date(from: comps) ?? date
+    }
+
+    private static func initialVisibleRange(
+        earliestYear: Date,
+        latestYear: Date,
+        visibleYearCount: Int
+    ) -> ClosedRange<Date> {
+        let calendar = Calendar.current
+        let offset = max(visibleYearCount - 1, 0)
+        let desiredStart = calendar.date(byAdding: .year, value: -offset, to: Self.yearStart(for: latestYear)) ?? latestYear
+        let start = max(earliestYear, desiredStart)
+        return start...latestYear
+    }
+
+    private func syncVisibleRange(with position: Date) {
+        let domainEnd = Self.yearEnd(for: latestYear)
+        let maxStart = max(earliestYear, domainEnd.addingTimeInterval(-visibleDomainLength))
+        let clampedStart = min(max(position, earliestYear), maxStart)
+        let clampedEnd = min(domainEnd, clampedStart.addingTimeInterval(visibleDomainLength))
+        let rightYear = min(Self.yearStart(for: clampedEnd), Self.yearStart(for: latestYear))
+        let leftCandidate = Self.addYears(rightYear, by: -(max(visibleYearCount - 1, 0)))
+        let leftYear = max(earliestYear, leftCandidate)
+        updateVisibleRange(leftYear...rightYear)
+    }
+
+    private func updateVisibleRange(_ bounds: ClosedRange<Date>) {
+        var lower = Self.yearStart(for: bounds.lowerBound)
+        var upper = Self.yearStart(for: bounds.upperBound)
+        lower = max(lower, earliestYear)
+        upper = min(upper, Self.yearStart(for: latestYear))
+        if lower > upper {
+            lower = upper
+        }
+        if visibleRange.lowerBound != lower || visibleRange.upperBound != upper {
+            DispatchQueue.main.async {
+                visibleRange = lower...upper
+            }
+        }
+    }
+
+    private static func yearEnd(for date: Date) -> Date {
+        let calendar = Calendar.current
+        let start = Self.yearStart(for: date)
+        guard let next = calendar.date(byAdding: .year, value: 1, to: start) else { return date }
+        return next.addingTimeInterval(-1)
+    }
+
+    private static func addYears(_ date: Date, by value: Int) -> Date {
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .year, value: value, to: date) ?? date
+    }
 }

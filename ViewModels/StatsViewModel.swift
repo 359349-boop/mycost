@@ -38,6 +38,12 @@ final class StatsViewModel {
         return calendar.date(from: comps) ?? date
     }
 
+    func yearStart(for date: Date) -> Date {
+        let calendar = Calendar.current
+        let comps = calendar.dateComponents([.year], from: date)
+        return calendar.date(from: comps) ?? date
+    }
+
     func recentMonths(from date: Date, count: Int) -> [Date] {
         let calendar = Calendar.current
         let start = monthStart(for: date)
@@ -61,11 +67,33 @@ final class StatsViewModel {
         return months
     }
 
+    func yearSeries(from start: Date, to end: Date) -> [Date] {
+        let calendar = Calendar.current
+        let startYear = yearStart(for: start)
+        let endYear = yearStart(for: end)
+        guard startYear <= endYear else { return [endYear] }
+        var years: [Date] = []
+        var cursor = startYear
+        while cursor <= endYear {
+            years.append(cursor)
+            guard let next = calendar.date(byAdding: .year, value: 1, to: cursor) else { break }
+            cursor = next
+        }
+        return years
+    }
+
     func earliestMonthStart(from transactions: [Transaction], fallback: Date) -> Date {
         guard let minDate = transactions.map(\.date).min() else { return monthStart(for: fallback) }
         let earliest = monthStart(for: minDate)
         let fallbackMonth = monthStart(for: fallback)
         return earliest > fallbackMonth ? fallbackMonth : earliest
+    }
+
+    func earliestYearStart(from transactions: [Transaction], fallback: Date) -> Date {
+        guard let minDate = transactions.map(\.date).min() else { return yearStart(for: fallback) }
+        let earliest = yearStart(for: minDate)
+        let fallbackYear = yearStart(for: fallback)
+        return earliest > fallbackYear ? fallbackYear : earliest
     }
 
     func recentYears(from date: Date, count: Int) -> [Date] {
