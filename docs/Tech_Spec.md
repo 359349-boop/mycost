@@ -50,6 +50,8 @@
   - 滑动：启用 `.chartScrollableAxes(.horizontal)`，可视范围固定为 6 个月，默认定位到当前月。
   - 数据范围：仅包含历史月份（`earliestMonth...currentMonthEnd`），不展示未来月份。
   - 动态尺度：y 轴最大值/中值基于当前可视 6 个月计算。
+  - 可视窗口判定：以当前滚动右边界月份为锚点，向左回推 6 个月生成窗口，避免边界月份抖动导致窗口漂移。
+  - 防误判策略：不使用 `ChartProxy` 的像素坐标反推可视月份，避免将窗口外历史极值（如 2025-05）错误纳入 y 轴计算。
 - Donut：`SectorMark` + `innerRadius`，外侧使用引线 + `annotation` 放置分类图标与百分比。
 - 构成分布：支持「支出/收入」切换，切换后 Donut 与分类列表联动刷新。
 - 颜色规范：Donut 分段使用 `Category.colorHex`。
