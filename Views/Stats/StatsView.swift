@@ -158,7 +158,7 @@ struct StatsView: View {
     }
 
     private var trendChartSection: some View {
-        let latestMonth = viewModel.monthStart(for: selectedMonth)
+        let latestMonth = viewModel.monthStart(for: .now)
         let earliestMonth = viewModel.earliestMonthStart(from: transactions, fallback: latestMonth)
         let months = viewModel.monthSeries(from: earliestMonth, to: latestMonth)
         let buckets = viewModel.monthlyBuckets(for: months, transactions: transactions)
@@ -166,7 +166,10 @@ struct StatsView: View {
             buckets: buckets,
             earliestMonth: earliestMonth,
             latestMonth: latestMonth,
-            visibleMonthCount: trendVisibleMonthCount
+            visibleMonthCount: trendVisibleMonthCount,
+            onSelectMonth: { tappedMonth in
+                selectedMonth = tappedMonth
+            }
         )
     }
 
@@ -366,9 +369,11 @@ private struct TrendChartCard: View {
     let earliestMonth: Date
     let latestMonth: Date
     let visibleMonthCount: Int
+    let onSelectMonth: (Date) -> Void
 
     @State private var scrollPosition: Date
     @State private var visibleRange: ClosedRange<Date>
+    @State private var plotFrameInChart: CGRect = .zero
 
     private let incomeColor = Color(.systemGreen)
     private let expenseColor = Color(.systemRed)
@@ -377,12 +382,14 @@ private struct TrendChartCard: View {
         buckets: [MonthlyBucket],
         earliestMonth: Date,
         latestMonth: Date,
-        visibleMonthCount: Int
+        visibleMonthCount: Int,
+        onSelectMonth: @escaping (Date) -> Void = { _ in }
     ) {
         self.buckets = buckets
         self.earliestMonth = earliestMonth
         self.latestMonth = latestMonth
         self.visibleMonthCount = visibleMonthCount
+        self.onSelectMonth = onSelectMonth
 
         let initialRange = Self.initialVisibleRange(
             earliestMonth: earliestMonth,
@@ -490,30 +497,49 @@ private struct TrendChartCard: View {
                 syncVisibleRange(with: newValue)
             }
             .chartOverlay { proxy in
-                if proxy.plotFrame != nil {
-                    let maxY = proxy.position(forY: displayMax)
-                    let midY = proxy.position(forY: displayMid)
-                    ZStack(alignment: .topLeading) {
-                        if displayMax > 0 {
-                            if let maxY {
-                                Text(formatAxisValue(displayMax))
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                    .position(x: 8, y: maxY)
-                            }
-                            if let midY {
-                                Text(formatAxisValue(displayMid))
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                    .position(x: 8, y: midY)
+                GeometryReader { geo in
+                    if let plotFrame = proxy.plotFrame {
+                        let frame = geo[plotFrame]
+                        let maxY = proxy.position(forY: displayMax)
+                        let midY = proxy.position(forY: displayMid)
+                        ZStack(alignment: .topLeading) {
+                            if displayMax > 0 {
+                                if let maxY {
+                                    Text(formatAxisValue(displayMax))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .position(x: 8, y: maxY)
+                                }
+                                if let midY {
+                                    Text(formatAxisValue(displayMid))
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .position(x: 8, y: midY)
+                                }
                             }
                         }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .background(
+                            Color.clear
+                                .onAppear {
+                                    plotFrameInChart = frame
+                                }
+                                .onChange(of: frame) { _, newFrame in
+                                    plotFrameInChart = newFrame
+                                }
+                        )
+                    } else {
+                        Color.clear
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                } else {
-                    Color.clear
                 }
+                .allowsHitTesting(false)
             }
+            .simultaneousGesture(
+                SpatialTapGesture()
+                    .onEnded { value in
+                        handleTap(at: value.location)
+                    }
+            )
             .frame(height: 90)
         }
         .padding(.vertical, 6)
@@ -538,6 +564,20 @@ private struct TrendChartCard: View {
         let formatted = String(format: "%.1f", rounded)
         let trimmed = formatted.hasSuffix(".0") ? String(formatted.dropLast(2)) : formatted
         return "\(trimmed)k"
+    }
+
+    private func handleTap(at location: CGPoint) {
+        guard plotFrameInChart != .zero, plotFrameInChart.contains(location) else { return }
+        let progress = min(max((location.x - plotFrameInChart.minX) / max(plotFrameInChart.width, 1), 0), 1)
+        let rangeStart = Self.monthStart(for: visibleRange.lowerBound)
+        let rangeEnd = Self.monthEnd(for: visibleRange.upperBound)
+        let duration = rangeEnd.timeIntervalSince(rangeStart)
+        let tappedDate = rangeStart.addingTimeInterval(duration * progress)
+        let sourceBuckets = visibleBuckets.isEmpty ? buckets : visibleBuckets
+        guard let nearest = sourceBuckets.min(by: {
+            abs($0.monthStart.timeIntervalSince(tappedDate)) < abs($1.monthStart.timeIntervalSince(tappedDate))
+        }) else { return }
+        onSelectMonth(Self.monthStart(for: nearest.monthStart))
     }
 
     private static func monthStart(for date: Date) -> Date {
