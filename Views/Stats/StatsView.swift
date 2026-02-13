@@ -176,37 +176,32 @@ struct StatsView: View {
         let containerHeight: CGFloat = 180
         let iconGap: CGFloat = 10
         let innerRatio: CGFloat = 0.55
-        let innerBandRatio: CGFloat = innerRatio + (1 - innerRatio) * 0.25
+        let innerBandRatio: CGFloat = innerRatio + (1 - innerRatio) * 0.18
         return VStack(alignment: .leading, spacing: 8) {
             ZStack {
                 Chart(slices) { slice in
                     let baseColor = Color(hex: slice.bucket.colorHex)
-                    let innerColor = darkerColor(hex: slice.bucket.colorHex, factor: 0.8)
-                    let outerRadius = ringSize / 2
-                    let innerRadius = outerRadius * innerRatio
-                    let bandRadius = outerRadius * innerBandRatio
-                    let stop = min(max((bandRadius - innerRadius) / max(outerRadius - innerRadius, 1), 0), 1)
-                    let gradient = RadialGradient(
-                        gradient: Gradient(stops: [
-                            .init(color: innerColor, location: 0),
-                            .init(color: innerColor, location: stop),
-                            .init(color: baseColor, location: min(stop + 0.01, 1)),
-                            .init(color: baseColor, location: 1)
-                        ]),
-                        center: .center,
-                        startRadius: innerRadius,
-                        endRadius: outerRadius
-                    )
                     SectorMark(
                         angle: .value("占比", abs(slice.bucket.total)),
                         innerRadius: .ratio(innerRatio),
                         outerRadius: .ratio(1.0),
                         angularInset: 2
                     )
-                    .foregroundStyle(gradient)
+                    .foregroundStyle(baseColor)
                 }
                 .frame(height: ringSize)
-                .animation(.spring(response: 0.36, dampingFraction: 0.86), value: slices.map { $0.percentage })
+
+                Chart(slices) { slice in
+                    let innerColor = darkerColor(hex: slice.bucket.colorHex, factor: 0.8)
+                    SectorMark(
+                        angle: .value("占比", abs(slice.bucket.total)),
+                        innerRadius: .ratio(innerRatio),
+                        outerRadius: .ratio(innerBandRatio),
+                        angularInset: 2
+                    )
+                    .foregroundStyle(innerColor)
+                }
+                .frame(height: ringSize)
 
                 GeometryReader { geo in
                     let size = ringSize
@@ -251,6 +246,7 @@ struct StatsView: View {
                 }
                 .allowsHitTesting(false)
             }
+            .animation(.spring(response: 0.36, dampingFraction: 0.86), value: slices.map { $0.percentage })
             .frame(height: containerHeight)
         }
         .padding()
