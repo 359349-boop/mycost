@@ -329,7 +329,11 @@ struct AddTransactionView: View {
     }
 
     private var filteredCategories: [Category] {
-        categories.filter { $0.type == type }
+        var seen = Set<UUID>()
+        return categories.filter { category in
+            guard category.type == type else { return false }
+            return seen.insert(category.id).inserted
+        }
     }
 
     private var displayExpression: String {
@@ -416,7 +420,10 @@ struct AddTransactionView: View {
     }
 
     private func ensureDefaultSelection() {
-        guard selectedCategory == nil else { return }
+        if let selectedCategory,
+           filteredCategories.contains(where: { $0.persistentModelID == selectedCategory.persistentModelID }) {
+            return
+        }
         selectedCategory = filteredCategories.first
     }
 

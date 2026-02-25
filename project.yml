@@ -13,6 +13,8 @@ targets:
   MyCost:
     type: application
     platform: iOS
+    settings:
+      TARGETED_DEVICE_FAMILY: 1
     sources:
       - path: MyCostApp.swift
       - path: Models
@@ -30,5 +32,8 @@ targets:
         CFBundleDisplayName: mycost
         UILaunchScreen:
           UILaunchScreen: {}
+        UIRequiresFullScreen: true
+        UIBackgroundModes:
+          - remote-notification
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

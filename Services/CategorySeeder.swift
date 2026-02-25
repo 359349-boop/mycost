@@ -104,6 +104,8 @@ enum CategorySeeder {
 
     static func seedIfNeeded(context: ModelContext) {
         let fetch = FetchDescriptor<Category>()
+        let initial = (try? context.fetch(fetch)) ?? []
+        deduplicateByID(initial, context: context)
         let existing = (try? context.fetch(fetch)) ?? []
 
         for preset in presets {
@@ -131,6 +133,32 @@ enum CategorySeeder {
                     sortIndex: preset.sortIndex
                 )
             )
+        }
+
+        if context.hasChanges {
+            try? context.save()
+        }
+    }
+
+    private static func deduplicateByID(_ categories: [Category], context: ModelContext) {
+        let sorted = categories.sorted {
+            if $0.sortIndex == $1.sortIndex {
+                return $0.id.uuidString < $1.id.uuidString
+            }
+            return $0.sortIndex < $1.sortIndex
+        }
+
+        var keeperByID: [UUID: Category] = [:]
+        for category in sorted {
+            if let keeper = keeperByID[category.id] {
+                for transaction in category.transactions ?? [] {
+                    transaction.category = keeper
+                    transaction.updatedAt = Date()
+                }
+                context.delete(category)
+            } else {
+                keeperByID[category.id] = category
+            }
         }
     }
 }

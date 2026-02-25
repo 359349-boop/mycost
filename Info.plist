@@ -25,6 +25,8 @@
 		<key>UILaunchScreen</key>
 		<dict/>
 	</dict>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct CategoryGrid: View {
     let categories: [Category]
@@ -13,12 +14,12 @@ struct CategoryGrid: View {
     var body: some View {
         let settingsColorHex = categories.first?.colorHex ?? "#8E8E93"
         LazyVGrid(columns: columns, spacing: 12) {
-            ForEach(categories, id: \.id) { category in
+            ForEach(categories, id: \.persistentModelID) { category in
                 CategoryGridItem(
                     iconName: category.iconName,
                     title: category.name,
                     colorHex: category.colorHex,
-                    isSelected: selected?.id == category.id
+                    isSelected: selected?.persistentModelID == category.persistentModelID
                 )
                 .onTapGesture {
                     selected = category
