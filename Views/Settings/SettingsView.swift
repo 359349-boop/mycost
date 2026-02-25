@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("app_theme") private var appThemeRaw: String = AppTheme.system.rawValue
+    @EnvironmentObject private var cloudSyncMonitor: CloudSyncMonitor
 
     var body: some View {
         List {
@@ -15,6 +16,12 @@ struct SettingsView: View {
                         Text(appTheme.displayName)
                             .foregroundStyle(.secondary)
                     }
+                }
+            }
+
+            Section("iCloud 同步") {
+                ICloudSyncStatusCard(state: cloudSyncMonitor.state) {
+                    cloudSyncMonitor.refresh()
                 }
             }
 

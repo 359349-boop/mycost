@@ -5,12 +5,13 @@ import UIKit
 
 @Model
 final class Category {
-    @Attribute(.unique) var id: UUID
-    var name: String
-    var iconName: String
-    var colorHex: String
-    var type: String
-    var sortIndex: Int
+    var id: UUID = UUID()
+    var name: String = ""
+    var iconName: String = "tag"
+    var colorHex: String = "#0A84FF"
+    var type: String = "Expense"
+    var sortIndex: Int = 0
+    var transactions: [Transaction]?
 
     init(
         id: UUID = UUID(),

@@ -34,8 +34,16 @@
 ## 4. 关键技术实现
 ### 4.1 iCloud 同步
 - 在 Xcode Capabilities 中开启 CloudKit。
-- 使用 `ModelConfiguration(cloudKitDatabase: .private("iCloud.com.yourname.ledger"))`。
+- 使用 `ModelConfiguration(cloudKitDatabase: .private("iCloud.cn.zjlib.other.mycost"))`。
+- Entitlements 必须声明 `com.apple.developer.icloud-container-identifiers` 与 `com.apple.developer.icloud-services = CloudKit`。
+- 账号与事件监控：
+  - 使用 `CKContainer.accountStatus` 检测账号可用性（`available/noAccount/restricted/...`）。
+  - 监听 `NSPersistentCloudKitContainer.eventChangedNotification` 观察导入/导出事件并更新 UI 状态。
+  - 应用回到前台与 iCloud 账号变化时（`.CKAccountChanged`）触发重新检测。
+- 状态机：`checking` / `syncing` / `ready(lastSyncAt)` / `unavailable(reason)` / `error(message)`。
+- 回退策略：若 CloudKit 容器初始化失败，回退本地 `ModelConfiguration()`，保证离线可用并在设置页展示异常。
 - 冲突策略：最后写入为准（Last-Write-Wins）。
+- 预置分类种子使用固定 UUID，防止多设备首次写入后产生重复分类。
 
 ### 4.2 外观适配
 - 使用系统语义色与资产色，默认跟随系统深浅色。

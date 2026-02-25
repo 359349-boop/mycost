@@ -9,9 +9,11 @@
 /* Begin PBXBuildFile section */
 		05B1E0365BF52D116782FA85 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABB102B06F18C91F36C191E2 /* SettingsView.swift */; };
 		0A6EFBA8B7AD90B682EA787D /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64BBE8D8C101B00012CC4C6E /* CategoryListView.swift */; };
+		1DA68DA5944BBCA56C8BCBF7 /* CloudSyncState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A1566E0CED301FA6610204 /* CloudSyncState.swift */; };
 		1F93BE179B61C58CA49294DA /* AddTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05B9C455E77044F21D35710 /* AddTransactionView.swift */; };
 		24713CB2134F2A777BB3A049 /* CategorySeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D9E9143DC98BB4CE06B5B3 /* CategorySeeder.swift */; };
 		292FCF5434F41B27B4BF819D /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AFD4393B744921B73CE0C3 /* StatsView.swift */; };
+		337812133D67D8DAC8C77192 /* CloudSyncMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D07EC15719E86A0722B346C /* CloudSyncMonitor.swift */; };
 		3744ABF83C481F1B1151FEF3 /* CategoryEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2A8502ADF17D4C7DE3009D /* CategoryEditorView.swift */; };
 		43996013C8547CFEDE9C594E /* ColorHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4F2608403582F2362DAFA3 /* ColorHex.swift */; };
 		44AECAC4594630F4BFFA6F0B /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9222274689A1F21463539972 /* HomeView.swift */; };
@@ -22,8 +24,10 @@
 		77B27C684323F7E6FDBBD727 /* StatSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61D04F0CDC90102883AE54E /* StatSummaryCard.swift */; };
 		77E61CAB6E038A59229F27B6 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2E93D581CAAD477A25E511 /* AppTheme.swift */; };
 		78AE3D8203624E5261172D2D /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40272634EBF26B8CA3B8B676 /* Transaction.swift */; };
+		78C8E4B5C10FB169CE94EAAD /* CloudSyncConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4C790EF952B1A33A0718D62 /* CloudSyncConfig.swift */; };
 		7B680C06103E5341310A8BB6 /* CalculatorPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4F94F7EBE464022E966241 /* CalculatorPad.swift */; };
 		8C4FC1619331925109AA84CA /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBAA52024439FC1B97333F6 /* Category.swift */; };
+		9650D16098305805920D53D7 /* ICloudSyncStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B86FD155CF8E49B05D32874 /* ICloudSyncStatusCard.swift */; };
 		B1C7FFAA27D577DC2D657C24 /* TransactionListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C28987122E52AE722D0724 /* TransactionListViewModel.swift */; };
 		D18C4C88AB6BF6C23F3E6AC8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3CE94280CEEBCF7337B09E7 /* RootView.swift */; };
 		E1FB0AF10007542988256997 /* ThemeSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677AC634128EC6B8D74971E4 /* ThemeSelectionView.swift */; };
@@ -37,14 +41,17 @@
 		1D546B6358EDCAFD988BCF22 /* CategoryGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryGrid.swift; sourceTree = "<group>"; };
 		27D6A458724594ED964D3CD3 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		2B4F2608403582F2362DAFA3 /* ColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorHex.swift; sourceTree = "<group>"; };
+		2B86FD155CF8E49B05D32874 /* ICloudSyncStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudSyncStatusCard.swift; sourceTree = "<group>"; };
 		3D4F94F7EBE464022E966241 /* CalculatorPad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorPad.swift; sourceTree = "<group>"; };
 		40272634EBF26B8CA3B8B676 /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 		441B5A139629470107082821 /* StatsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsViewModel.swift; sourceTree = "<group>"; };
 		556FCBAA5DA21FED74DAF018 /* MyCostApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyCostApp.swift; sourceTree = "<group>"; };
 		64BBE8D8C101B00012CC4C6E /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
 		677AC634128EC6B8D74971E4 /* ThemeSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSelectionView.swift; sourceTree = "<group>"; };
+		77A1566E0CED301FA6610204 /* CloudSyncState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncState.swift; sourceTree = "<group>"; };
 		77D9E9143DC98BB4CE06B5B3 /* CategorySeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategorySeeder.swift; sourceTree = "<group>"; };
 		80B4483A3B54BF04E4A64D8F /* MyCost.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyCost.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D07EC15719E86A0722B346C /* CloudSyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncMonitor.swift; sourceTree = "<group>"; };
 		9222274689A1F21463539972 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		934EFB35AAF13579BDE12451 /* TransactionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionRow.swift; sourceTree = "<group>"; };
 		93C28987122E52AE722D0724 /* TransactionListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionListViewModel.swift; sourceTree = "<group>"; };
@@ -54,6 +61,7 @@
 		C3CE94280CEEBCF7337B09E7 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		D8AFD4393B744921B73CE0C3 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		DEBAA52024439FC1B97333F6 /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
+		F4C790EF952B1A33A0718D62 /* CloudSyncConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncConfig.swift; sourceTree = "<group>"; };
 		F61D04F0CDC90102883AE54E /* StatSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatSummaryCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -81,6 +89,7 @@
 			children = (
 				0B2A8502ADF17D4C7DE3009D /* CategoryEditorView.swift */,
 				64BBE8D8C101B00012CC4C6E /* CategoryListView.swift */,
+				2B86FD155CF8E49B05D32874 /* ICloudSyncStatusCard.swift */,
 				ABB102B06F18C91F36C191E2 /* SettingsView.swift */,
 				677AC634128EC6B8D74971E4 /* ThemeSelectionView.swift */,
 			);
@@ -147,6 +156,9 @@
 			isa = PBXGroup;
 			children = (
 				77D9E9143DC98BB4CE06B5B3 /* CategorySeeder.swift */,
+				F4C790EF952B1A33A0718D62 /* CloudSyncConfig.swift */,
+				8D07EC15719E86A0722B346C /* CloudSyncMonitor.swift */,
+				77A1566E0CED301FA6610204 /* CloudSyncState.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -187,11 +199,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-					FADFF9C85ADD58A38E8B65C4 = {
-						ProvisioningStyle = Automatic;
-					};
-				};
 			};
 			buildConfigurationList = 1A4F51BEE4738E8438B519BC /* Build configuration list for PBXProject "MyCost" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -225,9 +232,13 @@
 				EE7FF63A535F22F559D0BEE7 /* CategoryIcon.swift in Sources */,
 				0A6EFBA8B7AD90B682EA787D /* CategoryListView.swift in Sources */,
 				24713CB2134F2A777BB3A049 /* CategorySeeder.swift in Sources */,
+				78C8E4B5C10FB169CE94EAAD /* CloudSyncConfig.swift in Sources */,
+				337812133D67D8DAC8C77192 /* CloudSyncMonitor.swift in Sources */,
+				1DA68DA5944BBCA56C8BCBF7 /* CloudSyncState.swift in Sources */,
 				43996013C8547CFEDE9C594E /* ColorHex.swift in Sources */,
 				5F4219FA06781C925283AA0B /* EmptyStateView.swift in Sources */,
 				44AECAC4594630F4BFFA6F0B /* HomeView.swift in Sources */,
+				9650D16098305805920D53D7 /* ICloudSyncStatusCard.swift in Sources */,
 				47CEDFED783C8F5F4B0B27C2 /* MyCostApp.swift in Sources */,
 				D18C4C88AB6BF6C23F3E6AC8 /* RootView.swift in Sources */,
 				05B1E0365BF52D116782FA85 /* SettingsView.swift in Sources */,
@@ -249,14 +260,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MyCost.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = U6CGTGE4G5;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = cn.zjlib.other.mycost;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -299,7 +311,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = U6CGTGE4G5;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -314,7 +326,7 @@
 				MARKETING_VERSION = 0.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.mycost;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.zjlib.other.mycost;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -360,7 +372,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = U6CGTGE4G5;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -382,7 +394,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.mycost;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.zjlib.other.mycost;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -396,14 +408,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MyCost.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = U6CGTGE4G5;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = cn.zjlib.other.mycost;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Charts
+import Darwin
 
 private enum StatsPeriod: String, CaseIterable, Identifiable {
     case month
@@ -360,10 +361,12 @@ struct StatsView: View {
     }
 
     private func point(on center: CGPoint, radius: CGFloat, angle: Angle) -> CGPoint {
-        let radians = angle.radians - (.pi / 2)
+        let radians: Double = angle.radians - (.pi / 2)
+        let dx: CGFloat = CGFloat(Darwin.cos(radians))
+        let dy: CGFloat = CGFloat(Darwin.sin(radians))
         return CGPoint(
-            x: center.x + radius * cos(radians),
-            y: center.y + radius * sin(radians)
+            x: center.x + radius * dx,
+            y: center.y + radius * dy
         )
     }
 
