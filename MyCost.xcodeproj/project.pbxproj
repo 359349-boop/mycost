@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -30,6 +30,7 @@
 		9650D16098305805920D53D7 /* ICloudSyncStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B86FD155CF8E49B05D32874 /* ICloudSyncStatusCard.swift */; };
 		B1C7FFAA27D577DC2D657C24 /* TransactionListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C28987122E52AE722D0724 /* TransactionListViewModel.swift */; };
 		D18C4C88AB6BF6C23F3E6AC8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3CE94280CEEBCF7337B09E7 /* RootView.swift */; };
+		D926F7BAF397194FBF82A586 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C98459EFB36E8F51F547AA60 /* Assets.xcassets */; };
 		E1FB0AF10007542988256997 /* ThemeSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677AC634128EC6B8D74971E4 /* ThemeSelectionView.swift */; };
 		E81C3E98EB228EA9701A7AA8 /* StatsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441B5A139629470107082821 /* StatsViewModel.swift */; };
 		EE7FF63A535F22F559D0BEE7 /* CategoryIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 084E8B9A9187382EA90DB130 /* CategoryIcon.swift */; };
@@ -50,7 +51,7 @@
 		677AC634128EC6B8D74971E4 /* ThemeSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSelectionView.swift; sourceTree = "<group>"; };
 		77A1566E0CED301FA6610204 /* CloudSyncState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncState.swift; sourceTree = "<group>"; };
 		77D9E9143DC98BB4CE06B5B3 /* CategorySeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategorySeeder.swift; sourceTree = "<group>"; };
-		80B4483A3B54BF04E4A64D8F /* MyCost.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyCost.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		80B4483A3B54BF04E4A64D8F /* MyCost.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MyCost.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D07EC15719E86A0722B346C /* CloudSyncMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncMonitor.swift; sourceTree = "<group>"; };
 		9222274689A1F21463539972 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		934EFB35AAF13579BDE12451 /* TransactionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionRow.swift; sourceTree = "<group>"; };
@@ -59,6 +60,7 @@
 		B05B9C455E77044F21D35710 /* AddTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTransactionView.swift; sourceTree = "<group>"; };
 		BE2E93D581CAAD477A25E511 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		C3CE94280CEEBCF7337B09E7 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		C98459EFB36E8F51F547AA60 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D8AFD4393B744921B73CE0C3 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		DEBAA52024439FC1B97333F6 /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
 		F4C790EF952B1A33A0718D62 /* CloudSyncConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncConfig.swift; sourceTree = "<group>"; };
@@ -131,6 +133,7 @@
 			children = (
 				556FCBAA5DA21FED74DAF018 /* MyCostApp.swift */,
 				6928507CBD3828554C43C6A4 /* Models */,
+				E111F8521C33C39508A22012 /* Resources */,
 				DFC965192BF800750CDE39A9 /* Services */,
 				0B06E2F5804790DC7DFC18C8 /* ViewModels */,
 				79656CDB08D3549B1D63C9EE /* Views */,
@@ -163,6 +166,14 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		E111F8521C33C39508A22012 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C98459EFB36E8F51F547AA60 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		ECF92E6D67FBE26C7D8BA931 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -179,6 +190,7 @@
 			buildConfigurationList = F63F811468762D0A6C40E1E5 /* Build configuration list for PBXNativeTarget "MyCost" */;
 			buildPhases = (
 				B8D179093B63B0764F7C211A /* Sources */,
+				88A3CBD70E1775CB3FE94EDB /* Resources */,
 			);
 			buildRules = (
 			);
@@ -199,6 +211,12 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					FADFF9C85ADD58A38E8B65C4 = {
+						DevelopmentTeam = U6CGTGE4G5;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 1A4F51BEE4738E8438B519BC /* Build configuration list for PBXProject "MyCost" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -210,6 +228,7 @@
 			);
 			mainGroup = 93EEFE71B3927EA8B1878F97;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -217,6 +236,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		88A3CBD70E1775CB3FE94EDB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D926F7BAF397194FBF82A586 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B8D179093B63B0764F7C211A /* Sources */ = {
@@ -260,21 +290,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MyCost.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = U6CGTGE4G5;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
@@ -413,21 +435,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MyCost.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = U6CGTGE4G5;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CoreData
 
 struct RootView: View {
     @Environment(\.modelContext) private var context
@@ -32,6 +33,23 @@ struct RootView: View {
         }
         .task {
             CategorySeeder.seedIfNeeded(context: context)
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSPersistentCloudKitContainer.eventChangedNotification
+            )
+            .receive(on: RunLoop.main)
+        ) { notification in
+            guard
+                let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
+                    as? NSPersistentCloudKitContainer.Event,
+                event.endDate != nil
+            else {
+                return
+            }
+            Task { @MainActor in
+                CategorySeeder.seedIfNeeded(context: context)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             withAnimation(.easeOut(duration: 0.2)) {

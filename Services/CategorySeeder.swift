@@ -102,10 +102,13 @@ enum CategorySeeder {
         )
     ]
 
+    private static let presetIDs = Set(presets.map(\.id))
+
     static func seedIfNeeded(context: ModelContext) {
         let fetch = FetchDescriptor<Category>()
         let initial = (try? context.fetch(fetch)) ?? []
         deduplicateByID(initial, context: context)
+        deduplicateByNameAndType((try? context.fetch(fetch)) ?? [], context: context)
         let existing = (try? context.fetch(fetch)) ?? []
 
         for preset in presets {
@@ -160,5 +163,41 @@ enum CategorySeeder {
                 keeperByID[category.id] = category
             }
         }
+    }
+
+    private static func deduplicateByNameAndType(_ categories: [Category], context: ModelContext) {
+        let sorted = categories.sorted { lhs, rhs in
+            let lhsIsPreset = presetIDs.contains(lhs.id)
+            let rhsIsPreset = presetIDs.contains(rhs.id)
+            if lhsIsPreset != rhsIsPreset {
+                return lhsIsPreset
+            }
+            if lhs.sortIndex == rhs.sortIndex {
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
+            return lhs.sortIndex < rhs.sortIndex
+        }
+
+        var keeperByNameAndType: [String: Category] = [:]
+
+        for category in sorted {
+            let key = "\(category.type.lowercased())|\(normalizedName(category.name))"
+            if let keeper = keeperByNameAndType[key] {
+                for transaction in category.transactions ?? [] {
+                    transaction.category = keeper
+                    transaction.updatedAt = Date()
+                }
+                context.delete(category)
+            } else {
+                keeperByNameAndType[key] = category
+            }
+        }
+    }
+
+    private static func normalizedName(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            .lowercased()
     }
 }

@@ -21,9 +21,8 @@ targets:
       - path: ViewModels
       - path: Views
       - path: Services
-    resources:
       - path: Resources
-      - path: Info.plist
+        buildPhase: resources
     entitlements:
       path: MyCost.entitlements
     info:

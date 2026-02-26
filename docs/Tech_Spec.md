@@ -30,6 +30,7 @@
 - `iconName: String` (SF Symbols)
 - `colorHex: String`（Hex 格式，e.g. "#RRGGBB"）
 - `type: String` (Income / Expense)
+- 业务约束：同一 `type` 下分类名称唯一（名称比较前会做 trim + case-insensitive 归一化）。
 
 ## 4. 关键技术实现
 ### 4.1 iCloud 同步
@@ -39,6 +40,7 @@
 - 账号与事件监控：
   - 使用 `CKContainer.accountStatus` 检测账号可用性（`available/noAccount/restricted/...`）。
   - 监听 `NSPersistentCloudKitContainer.eventChangedNotification` 观察导入/导出事件并更新 UI 状态。
+  - 在 CloudKit 导入/导出事件结束（`event.endDate != nil`）后触发一次 `CategorySeeder.seedIfNeeded`，将同步期间可能出现的重复预设分类即时去重。
   - 应用回到前台与 iCloud 账号变化时（`.CKAccountChanged`）触发重新检测。
 - 状态机：`checking` / `syncing` / `ready(lastSyncAt)` / `unavailable(reason)` / `error(message)`。
 - 回退策略：若 CloudKit 容器初始化失败，回退本地 `ModelConfiguration()`，保证离线可用并在设置页展示异常。

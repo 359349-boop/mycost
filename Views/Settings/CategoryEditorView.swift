@@ -12,6 +12,8 @@ struct CategoryEditorView: View {
     @State private var name: String
     @State private var iconName: String
     @State private var colorHex: String
+    @State private var duplicateAlertMessage: String = ""
+    @State private var showingDuplicateAlert = false
 
     private let icons: [String] = [
         "fork.knife", "tram", "bag", "gamecontroller", "cross", "house", "book",
@@ -88,12 +90,24 @@ struct CategoryEditorView: View {
                         .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
+            .alert("分类已存在", isPresented: $showingDuplicateAlert) {
+                Button("知道了", role: .cancel) {}
+            } message: {
+                Text(duplicateAlertMessage)
+            }
         }
     }
 
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+
+        if hasDuplicateCategory(named: trimmed) {
+            duplicateAlertMessage = "“\(trimmed)”已存在于当前\(type == "Expense" ? "支出" : "收入")分类中。"
+            showingDuplicateAlert = true
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            return
+        }
 
         if let existing = category {
             existing.name = trimmed
@@ -115,5 +129,25 @@ struct CategoryEditorView: View {
 
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         dismiss()
+    }
+
+    private func hasDuplicateCategory(named candidate: String) -> Bool {
+        let fetch = FetchDescriptor<Category>(predicate: #Predicate { $0.type == type })
+        let categoriesOfType = (try? context.fetch(fetch)) ?? []
+        let normalizedCandidate = normalizedName(candidate)
+
+        return categoriesOfType.contains { item in
+            if let editing = category, item.persistentModelID == editing.persistentModelID {
+                return false
+            }
+            return normalizedName(item.name) == normalizedCandidate
+        }
+    }
+
+    private func normalizedName(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            .lowercased()
     }
 }

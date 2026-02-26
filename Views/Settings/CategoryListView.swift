@@ -19,7 +19,7 @@ struct CategoryListView: View {
                 .pickerStyle(.segmented)
             }
 
-            ForEach(filtered, id: \.id) { category in
+            ForEach(filtered, id: \.persistentModelID) { category in
                 HStack(spacing: 12) {
                     CategoryIcon(iconName: category.iconName, colorHex: category.colorHex, size: 28, cornerRadius: 10)
                     Text(category.name)
