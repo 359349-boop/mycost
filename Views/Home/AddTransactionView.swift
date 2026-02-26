@@ -133,7 +133,7 @@ struct AddTransactionView: View {
 
     private var formContent: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 10) {
                 GroupBox {
                     HStack(spacing: 12) {
                         Button {
@@ -287,6 +287,7 @@ struct AddTransactionView: View {
                     .lineLimit(1)
             }
         }
+        .frame(height: 28, alignment: .leading)
     }
 
     private var noteIconButton: some View {
@@ -307,8 +308,8 @@ struct AddTransactionView: View {
     private var noteInlineEditor: some View {
         TextField("备注", text: $note)
             .font(.footnote)
-            .padding(.vertical, 6)
             .padding(.horizontal, 8)
+            .frame(height: 28)
             .background(Color(.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             .focused($noteFocused)
